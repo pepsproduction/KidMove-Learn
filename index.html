@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KidMove Learn - สวนผลไม้นับเลขแสนสนุก</title>
   
+  <script>
+    // Redirect if on GitHub Pages root to ensure compiled code is loaded
+    if (window.location.hostname.endsWith('github.io') && !window.location.pathname.includes('/dist/')) {
+      window.location.replace('./dist/');
+    }
+  </script>
+  
   <!-- SEO Meta Tags -->
   <meta name="description" content="KidMove Learn เว็บเกมเรียนรู้เสริมพัฒนาการสำหรับเด็กปฐมวัย 4-6 ขวบ ใช้กล้อง Webcam จับการเคลื่อนไหวของร่างกาย เล่นสนุก ปลอดภัย ไม่เก็บข้อมูลเด็ก">
   <meta name="keywords" content="เกมเด็ก, ตรวจจับท่าทาง, นวัตกรรมการเรียนรู้, สื่อการสอนปฐมวัย, MediaPipe, โคดดิ้งสำหรับเด็ก">

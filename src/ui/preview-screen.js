@@ -215,7 +215,6 @@ class PreviewScreen {
   updateSandbox() {
     // 1. Fetch camera motion leaning
     if (state.get('cameraActive')) {
-      const { gestureEngine } = import.meta.env ? { gestureEngine: null } : {}; 
       // Read continuous offset if baseline calibrated
       const currentGesture = state.get('currentGesture');
       // If we are getting the gesture, move basket accordingly

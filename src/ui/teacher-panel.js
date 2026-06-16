@@ -59,24 +59,27 @@ class TeacherPanel {
           <div class="tp-form-group">
             <label for="tp-level-select">ระดับการนับเลข:</label>
             <select id="tp-level-select" class="tp-select">
-              <option value="${LEVELS.EASY}">ง่าย (เลข 1 - 3)</option>
-              <option value="${LEVELS.NORMAL}">ปกติ (เลข 1 - 5)</option>
-              <option value="${LEVELS.HARD}">เก่งมาก (เลข 1 - 10)</option>
+              <option value="${LEVELS.EASY}" ${state.get('level') === LEVELS.EASY ? 'selected' : ''}>ง่าย (เลข 1 - 3)</option>
+              <option value="${LEVELS.NORMAL}" ${state.get('level') === LEVELS.NORMAL ? 'selected' : ''}>ปกติ (เลข 1 - 5)</option>
+              <option value="${LEVELS.HARD}" ${state.get('level') === LEVELS.HARD ? 'selected' : ''}>เก่งมาก (เลข 1 - 10)</option>
             </select>
           </div>
           <div class="tp-form-group">
             <label for="tp-collect-mode-select">วิธีเก็บผลไม้:</label>
             <select id="tp-collect-mode-select" class="tp-select">
-              <option value="gesture">ยกมือขวาเพื่อเก็บ</option>
-              <option value="auto">เก็บอัตโนมัติเมื่อตะกร้าตรงผลไม้</option>
+              <option value="gesture" ${state.get('collectMode') === 'gesture' ? 'selected' : ''}>ยกมือขวาเพื่อเก็บ</option>
+              <option value="auto" ${state.get('collectMode') === 'auto' ? 'selected' : ''}>เก็บอัตโนมัติเมื่อตะกร้าตรงผลไม้</option>
             </select>
           </div>
           <div class="tp-form-group">
             <label for="tp-voice-lang-select">ภาษาเสียงบรรยาย:</label>
             <select id="tp-voice-lang-select" class="tp-select">
-              <option value="th">ภาษาไทย (Thai)</option>
-              <option value="en">ภาษาอังกฤษ (English)</option>
+              <option value="th" ${state.get('voiceLang') === 'th' ? 'selected' : ''}>ภาษาไทย (Thai)</option>
+              <option value="en" ${state.get('voiceLang') === 'en' ? 'selected' : ''}>ภาษาอังกฤษ (English)</option>
             </select>
+          </div>
+          <div class="tp-form-group">
+            <button id="tp-btn-test-voice" class="btn btn-small btn-teal" style="width:100%">🔊 ทดสอบเสียงบรรยาย</button>
           </div>
         </div>
 
@@ -188,6 +191,23 @@ class TeacherPanel {
     voiceLangSelect.addEventListener('change', (e) => {
       audioManager.playSound('click');
       state.set({ voiceLang: e.target.value });
+    });
+
+    const testVoiceBtn = document.getElementById('tp-btn-test-voice');
+    testVoiceBtn.addEventListener('click', () => {
+      audioManager.playSound('click');
+      const lang = state.get('voiceLang') || 'th';
+      const textTh = 'สวัสดีจ๊ะ! นี่คือเสียงภาษาไทย พร้อมเล่นเกมสนุก ๆ เลยจ้า!';
+      const textEn = 'Hello! This is the English voice. Ready to play a fun game!';
+      // Show feedback
+      testVoiceBtn.textContent = lang === 'th' ? 'ส่งเสียงแล้ว...' : 'Playing...';
+      testVoiceBtn.disabled = true;
+      audioManager.listVoices();
+      audioManager.speak(textTh, textEn);
+      setTimeout(() => {
+        testVoiceBtn.textContent = '🔊 ทดสอบเสียงบรรยาย';
+        testVoiceBtn.disabled = false;
+      }, 3500);
     });
 
     soundToggle.addEventListener('change', (e) => {

@@ -436,13 +436,16 @@ class FruitCountGame {
       this.ctx.fillText(fruit.type.emoji, 0, 2);
 
       // If nearby, render helper prompt bubble for child
-      if (fruit.isNear) {
+      if (fruit.isNear && !this.isQuestionTransitioning) {
+        const collectMode = state.get('collectMode') || 'gesture';
+        const tipText = collectMode === 'auto' ? '✅ ตรงกันเลย!' : '🙋 ยกมือขวาเลย!';
+
         this.ctx.restore();
         this.ctx.save();
         this.ctx.translate(fruit.x + wobbleX, fruit.y - fruit.radius - 25);
-        this.ctx.fillStyle = '#ff8787';
+        this.ctx.fillStyle = collectMode === 'auto' ? '#2f9e44' : '#ff8787';
         this.ctx.beginPath();
-        this.ctx.roundRect(-55, -16, 110, 28, 8);
+        this.ctx.roundRect(-60, -16, 120, 28, 8);
         this.ctx.fill();
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.stroke();
@@ -450,7 +453,7 @@ class FruitCountGame {
         this.ctx.fillStyle = '#ffffff';
         this.ctx.font = "bold 13px 'Inter', sans-serif";
         this.ctx.textAlign = 'center';
-        this.ctx.fillText("ยกมือขวาเลย!", 0, 3);
+        this.ctx.fillText(tipText, 0, 3);
       }
 
       this.ctx.restore();

@@ -127,25 +127,58 @@ class AudioManager {
     }
   }
 
-  // Voice narration in Thai using browser speech synthesis
-  speak(text) {
+  getEnglishVoice() {
+    if (!this.speechSynth) return null;
+    const voices = this.speechSynth.getVoices();
+    
+    // 1. Prefer Google US English
+    let voice = voices.find(v => v.lang.toLowerCase().replace('_', '-').includes('en-us') && v.name.includes('Google'));
+    
+    // 2. Any en-US or en-GB
+    if (!voice) {
+      voice = voices.find(v => v.lang.toLowerCase().replace('_', '-').includes('en-us'));
+    }
+    if (!voice) {
+      voice = voices.find(v => v.lang.toLowerCase().replace('_', '-').includes('en-gb'));
+    }
+    
+    // 3. Any en
+    if (!voice) {
+      voice = voices.find(v => v.lang.toLowerCase().includes('en'));
+    }
+    
+    return voice;
+  }
+
+  // Voice narration in Thai or English using browser speech synthesis
+  speak(textTh, textEn) {
     if (!state.get('soundEnabled') || !this.speechSynth) return;
 
     // Cancel any active speech to avoid overlaps
     this.speechSynth.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'th-TH';
-    utterance.rate = 1.0; // Normal speaking rate for kids
-    utterance.pitch = 1.1; // Slightly high-pitched/friendly for children
+    const langSetting = state.get('voiceLang') || 'th';
+    const textToSpeak = (langSetting === 'en' && textEn) ? textEn : textTh;
+    const langCode = langSetting === 'en' ? 'en-US' : 'th-TH';
 
-    // Dynamic lookup backup if voices loaded late
-    if (!this.thaiVoice) {
-      this.thaiVoice = this.getThaiVoice();
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = langCode;
+    utterance.rate = 1.0; // Normal speaking rate for kids
+    utterance.pitch = langSetting === 'en' ? 1.0 : 1.1; // slightly higher pitch for Thai
+
+    let selectedVoice = null;
+    if (langSetting === 'en') {
+      selectedVoice = this.getEnglishVoice();
+    } else {
+      // Dynamic lookup backup if voices loaded late
+      if (!this.thaiVoice) {
+        this.thaiVoice = this.getThaiVoice();
+      }
+      selectedVoice = this.thaiVoice;
     }
 
-    if (this.thaiVoice) {
-      utterance.voice = this.thaiVoice;
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
     }
 
     this.speechSynth.speak(utterance);

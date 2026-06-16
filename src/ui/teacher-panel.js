@@ -35,6 +35,11 @@ class TeacherPanel {
       if (select) select.value = mode;
     });
 
+    state.subscribe('voiceLang', (lang) => {
+      const select = document.getElementById('tp-voice-lang-select');
+      if (select) select.value = lang;
+    });
+
     state.subscribe('lastScores', (history) => {
       this.updateHistoryList(history);
     });
@@ -64,6 +69,13 @@ class TeacherPanel {
             <select id="tp-collect-mode-select" class="tp-select">
               <option value="gesture">ยกมือขวาเพื่อเก็บ</option>
               <option value="auto">เก็บอัตโนมัติเมื่อตะกร้าตรงผลไม้</option>
+            </select>
+          </div>
+          <div class="tp-form-group">
+            <label for="tp-voice-lang-select">ภาษาเสียงบรรยาย:</label>
+            <select id="tp-voice-lang-select" class="tp-select">
+              <option value="th">ภาษาไทย (Thai)</option>
+              <option value="en">ภาษาอังกฤษ (English)</option>
             </select>
           </div>
         </div>
@@ -172,6 +184,12 @@ class TeacherPanel {
       state.set({ collectMode: e.target.value });
     });
 
+    const voiceLangSelect = document.getElementById('tp-voice-lang-select');
+    voiceLangSelect.addEventListener('change', (e) => {
+      audioManager.playSound('click');
+      state.set({ voiceLang: e.target.value });
+    });
+
     soundToggle.addEventListener('change', (e) => {
       state.set({ soundEnabled: e.target.checked });
       audioManager.playSound('click');
@@ -232,11 +250,11 @@ class TeacherPanel {
           if (state.get('currentScreen') === SCREENS.GAME_PLAY) {
             if (state.get('gameRunning')) {
               fruitCountGame.stop();
-              audioManager.speak("หยุดเล่นชั่วคราว");
+              audioManager.speak("หยุดเล่นชั่วคราว", "Game paused.");
             } else {
               state.set({ gameRunning: true });
               fruitCountGame.loop();
-              audioManager.speak("เล่นต่อจ้า");
+              audioManager.speak("เล่นต่อจ้า", "Game resumed.");
             }
           }
           break;

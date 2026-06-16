@@ -104,7 +104,7 @@ window.addEventListener('DOMContentLoaded', async () => {
           cameraActive: false,
           calibrationDone: true
         });
-        audioManager.speak("ไม่พบกล้องจ้า สามารถเล่นผ่านคีย์บอร์ดโดยใช้ลูกศรซ้ายขวาและปุ่มเอ็นเทอร์ได้เลยนะ");
+        audioManager.speak("ไม่พบกล้องจ้า สามารถเล่นผ่านคีย์บอร์ดโดยใช้ลูกศรซ้ายขวาและปุ่มเอ็นเทอร์ได้เลยนะ", "No camera detected. You can play using the left and right arrow keys and the Enter key.");
         
         setTimeout(() => {
           state.set({ currentScreen: SCREENS.GAME_PLAY });

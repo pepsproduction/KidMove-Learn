@@ -114,9 +114,10 @@ class FruitCountGame {
     this.fruits = [];
     this.hasAnnouncedQuestion = false;
     
-    // Announce via TTS in Thai
-    const text = `ข้อที่ ${currentIdx + 1}! ช่วยเก็บ ${fruitType.name} ${targetCount} ลูก ให้ทีนะจ๊ะ`;
-    audioManager.speak(text);
+    // Announce via TTS in Thai or English
+    const textTh = `ข้อที่ ${currentIdx + 1}! ช่วยเก็บ ${fruitType.name} ${targetCount} ลูก ให้ทีนะจ๊ะ`;
+    const textEn = `Question number ${currentIdx + 1}! Please collect ${targetCount} ${targetCount > 1 ? fruitType.nameEnPlural : fruitType.nameEn} for me.`;
+    audioManager.speak(textTh, textEn);
   }
 
   endGameSession() {
@@ -267,7 +268,7 @@ class FruitCountGame {
             if (nextPicked === targetCount) {
               // Level objective complete!
               audioManager.playSound('correct');
-              audioManager.speak("เก่งมากจ้า! ครบแล้ว!");
+              audioManager.speak("เก่งมากจ้า! ครบแล้ว!", "Well done! That is correct!");
               
               // Sparkle effect
               for (let p = 0; p < 25; p++) {
@@ -289,14 +290,14 @@ class FruitCountGame {
             } else if (nextPicked > targetCount) {
               // Collected too many!
               audioManager.playSound('incorrect');
-              audioManager.speak("ลองใหม่นะ อีกนิดเดียวจ้า");
+              audioManager.speak("ลองใหม่นะ อีกนิดเดียวจ้า", "Try again! You are so close.");
               state.set({ fruitsPicked: 0 }); // reset count for this question friendly fallback
               this.fruits = [];
             }
           } else {
             // Decoy fruit picked
             audioManager.playSound('incorrect');
-            audioManager.speak(`นี่คือ ${fruit.type.name} จ้า ลองหา ${targetFruit.name} นะคนเก่ง`);
+            audioManager.speak(`นี่คือ ${fruit.type.name} จ้า ลองหา ${targetFruit.name} นะคนเก่ง`, `This is an ${fruit.type.nameEn}! Look for the ${targetFruit.nameEn}, superstar!`);
             // Just push fruit away (no penalty, friendly game)
             fruit.vy = -3.5; // bounce up
             fruit.vx = randomRange(-4, 4);

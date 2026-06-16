@@ -16,6 +16,7 @@ class StateStore {
       soundEnabled: persisted.soundEnabled !== undefined ? persisted.soundEnabled : true,
       debugSkeleton: persisted.debugSkeleton !== undefined ? persisted.debugSkeleton : false,
       collectMode: persisted.collectMode || 'gesture', // 'gesture' or 'auto'
+      voiceLang: persisted.voiceLang || 'th', // 'th' or 'en'
       
       // Live Camera & Gesture state
       cameraReady: false,
@@ -70,12 +71,13 @@ class StateStore {
       }
     }
 
-    if (affectedKeys.some(k => ['level', 'soundEnabled', 'debugSkeleton', 'collectMode', 'lastScores'].includes(k))) {
+    if (affectedKeys.some(k => ['level', 'soundEnabled', 'debugSkeleton', 'collectMode', 'voiceLang', 'lastScores'].includes(k))) {
       saveSettings({
         level: this.state.level,
         soundEnabled: this.state.soundEnabled,
         debugSkeleton: this.state.debugSkeleton,
         collectMode: this.state.collectMode,
+        voiceLang: this.state.voiceLang,
         lastScores: this.state.lastScores
       });
     }

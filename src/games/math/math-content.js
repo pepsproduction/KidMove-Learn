@@ -1,11 +1,11 @@
 import { LEVELS } from '../../app/constants.js';
 
 export const FRUITS = [
-  { id: 'apple', name: 'แอปเปิล', emoji: '🍎', color: '#ff4d4d' },
-  { id: 'banana', name: 'กล้วย', emoji: '🍌', color: '#ffe066' },
-  { id: 'orange', name: 'ส้ม', emoji: '🍊', color: '#ffa94d' },
-  { id: 'watermelon', name: 'แตงโม', emoji: '🍉', color: '#51cf66' },
-  { id: 'grape', name: 'องุ่น', emoji: '🍇', color: '#be4bdb' }
+  { id: 'apple', name: 'แอปเปิล', nameEn: 'apple', nameEnPlural: 'apples', emoji: '🍎', color: '#ff4d4d' },
+  { id: 'banana', name: 'กล้วย', nameEn: 'banana', nameEnPlural: 'bananas', emoji: '🍌', color: '#ffe066' },
+  { id: 'orange', name: 'ส้ม', nameEn: 'orange', nameEnPlural: 'oranges', emoji: '🍊', color: '#ffa94d' },
+  { id: 'watermelon', name: 'แตงโม', nameEn: 'watermelon', nameEnPlural: 'watermelons', emoji: '🍉', color: '#51cf66' },
+  { id: 'grape', name: 'องุ่น', nameEn: 'grape', nameEnPlural: 'grapes', emoji: '🍇', color: '#be4bdb' }
 ];
 
 export function getTargetRangeForLevel(level) {

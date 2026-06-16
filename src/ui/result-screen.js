@@ -77,9 +77,10 @@ class ResultScreen {
     // Play fanfare
     audioManager.playSound('completion');
     
-    // Narrate score in Thai
-    const text = `ยินดีด้วยนะจ๊ะคนดี! หนูสะสมคะแนนได้ ${scoreVal} คะแนน! เก่งที่สุดเลย!`;
-    audioManager.speak(text);
+    // Narrate score in Thai or English
+    const textTh = `ยินดีด้วยนะจ๊ะคนดี! หนูสะสมคะแนนได้ ${scoreVal} คะแนน! เก่งที่สุดเลย!`;
+    const textEn = `Congratulations! You scored ${scoreVal} points! You are awesome!`;
+    audioManager.speak(textTh, textEn);
 
     this.bindEvents();
   }

@@ -30,7 +30,7 @@ class Calibration {
     this.loop();
     
     // Play a friendly introductory sound
-    audioManager.speak("ยืนในกรอบดาวแล้วยกสองมือขึ้นพร้อมกันเพื่อเริ่มเกมนะจ๊ะ");
+    audioManager.speak("ยืนในกรอบดาวแล้วยกสองมือขึ้นพร้อมกันเพื่อเริ่มเกมนะจ๊ะ", "Please stand inside the star frame and raise both hands to start the game.");
   }
 
   stop() {
@@ -102,7 +102,7 @@ class Calibration {
               state.set({ calibrationDone: true });
               
               audioManager.playSound('completion');
-              audioManager.speak("เก่งมากจ้า! เริ่มเกมคณิตศาสตร์แสนสนุกกันเลย!");
+              audioManager.speak("เก่งมากจ้า! เริ่มเกมคณิตศาสตร์แสนสนุกกันเลย!", "Well done! Let's start the fun math game!");
               
               setTimeout(() => {
                 state.set({ currentScreen: SCREENS.GAME_PLAY });

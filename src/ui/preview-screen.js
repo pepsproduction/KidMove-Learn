@@ -167,7 +167,7 @@ class PreviewScreen {
       voteBtn.disabled = true;
       
       // Make a cute vocal appreciation
-      audioManager.speak("ขอบพระคุณคุณครูสำหรับการโหวตนะจ๊ะ! ทีมงานจะรีบพัฒนาเลยจ้า");
+      audioManager.speak("ขอบพระคุณคุณครูสำหรับการโหวตนะจ๊ะ! ทีมงานจะรีบพัฒนาเลยจ้า", "Thank you teachers for voting! Our team will develop this soon.");
     });
   }
 

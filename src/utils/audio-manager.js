@@ -35,6 +35,7 @@ class AudioManager {
     this.speechSynth = window.speechSynthesis || null;
     this.englishVoice = null;
     this.currentThaiAudio = null;
+    this.speechSessionId = 0;
 
     if (this.speechSynth) {
       const loadVoices = () => {
@@ -125,39 +126,78 @@ class AudioManager {
 
   // ── Thai TTS ──────────────────────────────────────────────────────────────
   _speakThai(text) {
+    this.speechSessionId++;
+    const sessionId = this.speechSessionId;
+
     if (this.currentThaiAudio) {
-      this.currentThaiAudio.pause();
-      this.currentThaiAudio.src = '';
+      try {
+        this.currentThaiAudio.pause();
+        this.currentThaiAudio.src = '';
+      } catch (e) {
+        console.warn('[TTS] Error pausing current audio:', e);
+      }
       this.currentThaiAudio = null;
     }
-    if (this.speechSynth) this.speechSynth.cancel();
+    if (this.speechSynth) {
+      try {
+        this.speechSynth.cancel();
+      } catch (e) {
+        console.warn('[TTS] Error cancelling speechSynth:', e);
+      }
+    }
 
     // Get ordered list: CF Worker → CORS proxies → direct
     const urls = buildThaiTTSUrls(text);
     let urlIdx = 0;
 
     const tryNext = () => {
+      // Abort if this fallback chain has been superseded by a new speech request
+      if (sessionId !== this.speechSessionId) {
+        console.log(`[TTS] Session ${sessionId} superseded by ${this.speechSessionId}. Aborting.`);
+        return;
+      }
+
       if (urlIdx >= urls.length) {
         console.warn('[TTS] All strategies failed. Trying Web Speech API (may be silent without Thai voice).');
-        if (this.speechSynth) {
+        if (this.speechSynth && sessionId === this.speechSessionId) {
           const utt = new SpeechSynthesisUtterance(text);
           utt.lang = 'th-TH';
-          utt.rate = 0.85;
+          utt.rate = 1.15; // Speed up Thai Web Speech API fallback slightly (was 0.85)
           this.speechSynth.speak(utt);
         }
         return;
       }
 
       const url   = urls[urlIdx++];
+      console.log(`[TTS] Session ${sessionId}: Trying strategy ${urlIdx} with URL: ${url}`);
       const audio = new Audio(url);
+      
+      // Speed up the Thai Audio playback slightly as requested (e.g. 1.15x speed)
+      audio.defaultPlaybackRate = 1.15;
+      audio.playbackRate = 1.15;
+      
+      // Re-apply rate on play/canplay because some browsers reset playbackRate on loading new source
+      audio.addEventListener('play', () => {
+        audio.playbackRate = 1.15;
+      });
+      audio.addEventListener('canplay', () => {
+        audio.playbackRate = 1.15;
+      });
+
       this.currentThaiAudio = audio;
 
       let settled = false;
       const onFail = (reason) => {
+        if (sessionId !== this.speechSessionId) {
+          console.log(`[TTS] Session ${sessionId} superseded during failure callback. Ignoring.`);
+          return;
+        }
         if (settled) return;
         settled = true;
         console.warn(`[TTS] Strategy ${urlIdx} failed (${reason}), trying next…`);
-        audio.src = '';
+        try {
+          audio.src = '';
+        } catch (e) {}
         tryNext();
       };
 
@@ -170,6 +210,7 @@ class AudioManager {
 
   // ── English TTS ───────────────────────────────────────────────────────────
   _speakEnglish(text) {
+    this.speechSessionId++; // Cancel active Thai fallbacks
     if (!this.speechSynth) return;
     this.speechSynth.cancel();
     if (!this.englishVoice) {
@@ -177,7 +218,7 @@ class AudioManager {
     }
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang  = 'en-US';
-    utt.rate  = 0.95;
+    utt.rate  = 1.15; // Speed up English speech rate slightly (was 0.95)
     utt.pitch = 1.0;
     if (this.englishVoice) utt.voice = this.englishVoice;
     this.speechSynth.speak(utt);
@@ -186,11 +227,17 @@ class AudioManager {
   // ── Public API ────────────────────────────────────────────────────────────
   speak(textTh, textEn) {
     if (!state.get('soundEnabled')) return;
+    
+    // Always increment speechSessionId immediately to cancel any active fallbacks
+    this.speechSessionId++;
+    
     const lang = state.get('voiceLang') || 'th';
     if (lang === 'en' && textEn) {
       if (this.currentThaiAudio) {
-        this.currentThaiAudio.pause();
-        this.currentThaiAudio.src = '';
+        try {
+          this.currentThaiAudio.pause();
+          this.currentThaiAudio.src = '';
+        } catch (e) {}
         this.currentThaiAudio = null;
       }
       this._speakEnglish(textEn);

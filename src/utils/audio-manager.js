@@ -1,25 +1,33 @@
 import { state } from '../app/state.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Thai TTS Strategy
+//  Thai TTS via our own Cloudflare Worker proxy
+//  Worker fetches Google TTS server-to-server (always allowed) and returns
+//  the MP3 audio with proper CORS headers so the browser can play it.
 //
-//  Google Translate TTS blocks direct browser requests from external origins.
-//  Solution: route through a free CORS-proxy server that fetches Google TTS
-//  server-to-server (allowed), then returns audio with CORS headers.
-//
-//  Priority order:
-//    1. corsproxy.io   → Google Translate TTS (tw-ob client)
-//    2. allorigins.win → Google Translate TTS
-//    3. corsproxy.io   → googleapis.com (alternate domain)
-//    4. Direct Google TTS URLs (may work in some networks / future)
-//    5. Web Speech API (no Thai = likely silent, but won't crash)
+//  Worker URL: https://aged-block-b4ea.bankkjchannel.workers.dev/
+//  Query:      ?q=ENCODED_TEXT&lang=th
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GOOGLE_TTS = (q, len) =>
-  `https://translate.google.com/translate_tts?ie=UTF-8&q=${q}&tl=th&client=tw-ob&prev=input&total=1&idx=0&textlen=${len}`;
+const CF_WORKER = 'https://aged-block-b4ea.bankkjchannel.workers.dev/';
 
-const GOOGLE_TTS_ALT = (q, len) =>
-  `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${q}&tl=th&client=tw-ob&textlen=${len}`;
+// Build URL list to try in order (our Worker first, then public CORS proxies as backup)
+const buildThaiTTSUrls = (text) => {
+  const q   = encodeURIComponent(text);
+  const len = text.length;
+  const googleDirect = `https://translate.google.com/translate_tts?ie=UTF-8&q=${q}&tl=th&client=tw-ob&prev=input&total=1&idx=0&textlen=${len}`;
+
+  return [
+    // ① Our own Cloudflare Worker (most reliable)
+    `${CF_WORKER}?q=${q}&lang=th`,
+    // ② CORS proxy fallbacks
+    `https://corsproxy.io/?url=${encodeURIComponent(googleDirect)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(googleDirect)}`,
+    // ③ Direct (may work on some networks)
+    googleDirect,
+  ];
+};
+
 
 class AudioManager {
   constructor() {
@@ -117,7 +125,6 @@ class AudioManager {
 
   // ── Thai TTS ──────────────────────────────────────────────────────────────
   _speakThai(text) {
-    // Stop any currently playing Thai audio
     if (this.currentThaiAudio) {
       this.currentThaiAudio.pause();
       this.currentThaiAudio.src = '';
@@ -125,31 +132,13 @@ class AudioManager {
     }
     if (this.speechSynth) this.speechSynth.cancel();
 
-    const q   = encodeURIComponent(text);
-    const len = text.length;
-
-    const directUrl  = GOOGLE_TTS(q, len);
-    const altUrl     = GOOGLE_TTS_ALT(q, len);
-
-    // Build ordered list of URLs to try.
-    // CORS-proxy URLs first: the proxy server fetches Google TTS server-to-server
-    // (Google allows this), then returns the audio to us with CORS headers.
-    const urls = [
-      `https://corsproxy.io/?url=${encodeURIComponent(directUrl)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`,
-      `https://corsproxy.io/?url=${encodeURIComponent(altUrl)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(altUrl)}`,
-      directUrl,   // Direct — may work in some corporate/school networks
-      altUrl,
-    ];
-
+    // Get ordered list: CF Worker → CORS proxies → direct
+    const urls = buildThaiTTSUrls(text);
     let urlIdx = 0;
 
     const tryNext = () => {
       if (urlIdx >= urls.length) {
-        // Absolute last resort — Web Speech API with th-TH
-        // On systems without Thai voice this will be silent, but won't throw
-        console.warn('[TTS] All proxy strategies failed. Falling back to Web Speech API.');
+        console.warn('[TTS] All strategies failed. Trying Web Speech API (may be silent without Thai voice).');
         if (this.speechSynth) {
           const utt = new SpeechSynthesisUtterance(text);
           utt.lang = 'th-TH';

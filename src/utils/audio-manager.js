@@ -9,8 +9,7 @@ class AudioManager {
     // Find Thai voice if available
     if (this.speechSynth) {
       const loadVoices = () => {
-        const voices = this.speechSynth.getVoices();
-        this.thaiVoice = voices.find(v => v.lang.includes('TH') || v.lang.includes('th'));
+        this.thaiVoice = this.getThaiVoice();
       };
       
       loadVoices();
@@ -18,6 +17,31 @@ class AudioManager {
         this.speechSynth.onvoiceschanged = loadVoices;
       }
     }
+  }
+
+  getThaiVoice() {
+    if (!this.speechSynth) return null;
+    const voices = this.speechSynth.getVoices();
+    
+    // 1. Prefer Google Thai online voice
+    let voice = voices.find(v => v.lang.toLowerCase().replace('_', '-').includes('th-th') && v.name.includes('Google'));
+    
+    // 2. Prefer Microsoft Pattara Online or natural voices
+    if (!voice) {
+      voice = voices.find(v => v.lang.toLowerCase().replace('_', '-').includes('th-th') && (v.name.includes('Online') || v.name.includes('Natural')));
+    }
+    
+    // 3. Any exact th-TH match
+    if (!voice) {
+      voice = voices.find(v => v.lang.toLowerCase().replace('_', '-').includes('th-th'));
+    }
+    
+    // 4. Any voice containing 'th' in language code
+    if (!voice) {
+      voice = voices.find(v => v.lang.toLowerCase().includes('th'));
+    }
+    
+    return voice;
   }
 
   // Lazy-initialize audio context on user interaction
@@ -114,6 +138,11 @@ class AudioManager {
     utterance.lang = 'th-TH';
     utterance.rate = 1.0; // Normal speaking rate for kids
     utterance.pitch = 1.1; // Slightly high-pitched/friendly for children
+
+    // Dynamic lookup backup if voices loaded late
+    if (!this.thaiVoice) {
+      this.thaiVoice = this.getThaiVoice();
+    }
 
     if (this.thaiVoice) {
       utterance.voice = this.thaiVoice;

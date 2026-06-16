@@ -79,6 +79,7 @@ class FruitCountGame {
     this.fruits = [];
     this.particles = [];
     this.lastSpawnTime = 0;
+    this.isQuestionTransitioning = false;
     
     this.generateQuestion();
     this.loop();
@@ -201,7 +202,7 @@ class FruitCountGame {
     this.basketX += (this.basketTargetX - this.basketX) * MATH_GAME_CONFIG.basketSmoothFactor;
 
     // 3. Spawning Fruits
-    if (now - this.lastSpawnTime > MATH_GAME_CONFIG.spawnIntervalMs) {
+    if (!this.isQuestionTransitioning && (now - this.lastSpawnTime > MATH_GAME_CONFIG.spawnIntervalMs)) {
       this.spawnFruit();
       this.lastSpawnTime = now;
     }
@@ -247,7 +248,7 @@ class FruitCountGame {
       // Tag fruit as nearby
       fruit.isNear = (distance < MATH_GAME_CONFIG.collectionDistance);
 
-      if (fruit.isNear) {
+      if (fruit.isNear && !this.isQuestionTransitioning) {
         // Child triggered collection gesture or press enter
         if (isHarvesting) {
           // Check if collected fruit matches target
@@ -273,16 +274,16 @@ class FruitCountGame {
                 this.createExplosion(MATH_GAME_CONFIG.canvasWidth / 2, MATH_GAME_CONFIG.canvasHeight / 2, '#ffcc00');
               }
 
-              // Delay shortly then load next question
-              this.stop();
+              // Delay shortly then load next question smoothly without stopping loop
+              this.isQuestionTransitioning = true;
               setTimeout(() => {
+                // Check if screen changed while waiting
+                if (state.get('currentScreen') !== SCREENS.GAME_PLAY) return;
+
+                this.isQuestionTransitioning = false;
                 const currentIdx = state.get('currentQuestionIdx');
                 state.set({ currentQuestionIdx: currentIdx + 1 });
                 this.generateQuestion();
-                if (state.get('currentQuestionIdx') < MATH_GAME_CONFIG.questionsPerSession) {
-                  state.set({ gameRunning: true }); // Restart game state to let the loop run
-                  this.loop();
-                }
               }, 1800);
               break;
             } else if (nextPicked > targetCount) {

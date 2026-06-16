@@ -53,7 +53,7 @@ class HomeScreen {
               </div>
               <div class="step-card">
                 <span class="step-num">3</span>
-                <p><strong>ยกมือขวาขึ้นสูง</strong> เมื่อผลไม้อยู่ใกล้ตะกร้าเพื่อเก็บผลไม้</p>
+                <p><strong>ยกมือขวา</strong> หรือ <strong>ขยับตะกร้าให้ตรง</strong> (ตามโหมดที่เลือก) เพื่อเก็บผลไม้</p>
               </div>
               <div class="step-card">
                 <span class="step-num">4</span>

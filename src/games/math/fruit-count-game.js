@@ -222,9 +222,11 @@ class FruitCountGame {
     const targetCount = state.get('questionTarget');
     const currentPicked = state.get('fruitsPicked');
 
+    // Read collection mode setting
+    const collectMode = state.get('collectMode') || 'gesture';
     // Read current gesture
     const currentGesture = state.get('currentGesture');
-    const isHarvesting = (currentGesture === GESTURES.RAISE_RIGHT || this.keys.Enter);
+    const isHarvesting = (collectMode === 'auto' || currentGesture === GESTURES.RAISE_RIGHT || this.keys.Enter);
 
     for (let i = this.fruits.length - 1; i >= 0; i--) {
       const fruit = this.fruits[i];
@@ -278,6 +280,7 @@ class FruitCountGame {
                 state.set({ currentQuestionIdx: currentIdx + 1 });
                 this.generateQuestion();
                 if (state.get('currentQuestionIdx') < MATH_GAME_CONFIG.questionsPerSession) {
+                  state.set({ gameRunning: true }); // Restart game state to let the loop run
                   this.loop();
                 }
               }, 1800);

@@ -15,6 +15,7 @@ class StateStore {
       level: persisted.level || LEVELS.NORMAL,
       soundEnabled: persisted.soundEnabled !== undefined ? persisted.soundEnabled : true,
       debugSkeleton: persisted.debugSkeleton !== undefined ? persisted.debugSkeleton : false,
+      collectMode: persisted.collectMode || 'gesture', // 'gesture' or 'auto'
       
       // Live Camera & Gesture state
       cameraReady: false,
@@ -69,12 +70,12 @@ class StateStore {
       }
     }
 
-    // Persist settings if configuration changed
-    if (affectedKeys.some(k => ['level', 'soundEnabled', 'debugSkeleton', 'lastScores'].includes(k))) {
+    if (affectedKeys.some(k => ['level', 'soundEnabled', 'debugSkeleton', 'collectMode', 'lastScores'].includes(k))) {
       saveSettings({
         level: this.state.level,
         soundEnabled: this.state.soundEnabled,
         debugSkeleton: this.state.debugSkeleton,
+        collectMode: this.state.collectMode,
         lastScores: this.state.lastScores
       });
     }

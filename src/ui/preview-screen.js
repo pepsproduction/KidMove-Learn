@@ -81,17 +81,17 @@ class PreviewScreen {
       };
     } else {
       return {
-        title: "🔤 English Subject (Coming Soon!)",
-        subtitle: "Unlock Vocabulary with Actions & Gestures",
-        desc: "Children learn basic vocabulary (animals, fruits, shapes) and letter combinations using full-body motion tracks.",
+        title: "🔤 วิชาภาษาอังกฤษ (Coming Soon!)",
+        subtitle: "เรียนรู้คำศัพท์ภาษาอังกฤษผ่านท่าทางการเคลื่อนไหว",
+        desc: "เด็ก ๆ จะได้เรียนรู้คำศัพท์ภาษาอังกฤษพื้นฐาน เช่น สัตว์ ผลไม้ รูปทรง และสะกดคำง่าย ๆ ผ่านการขยับร่างกาย",
         games: [
           {
-            title: "🧺 Word Catch Spelling (สะกดคำจับผลไม้)",
-            detail: "Catch letters descending in sequence (e.g. D - O - G). Avoid wrong letters that break spelling combos!"
+            title: "🧺 เกมสะกดคำผลไม้หลากสี (Word Catch)",
+            detail: "เก็บตัวอักษรภาษาอังกฤษที่หล่นลงมาตามลำดับเพื่อสะกดคำศัพท์ (เช่น D - O - G) และระวังตัวอักษรที่ผิดนะจ๊ะ!"
           },
           {
-            title: "🧭 Compass Run Directional (เรือใบเข็มทิศ)",
-            detail: "Tilt left/right and squat to steer a sailboat to collect translation treasure chests on the map."
+            title: "🧭 เกมเรือใบนำทางคำศัพท์ (Compass Run)",
+            detail: "เอียงตัวซ้าย-ขวาและย่อตัวลงเพื่อควบคุมเรือใบไปเก็บกล่องสมบัติคำแปลที่ถูกต้องบนแผนที่!"
           }
         ],
         storageKey: 'voted_english'

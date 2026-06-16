@@ -30,6 +30,11 @@ class TeacherPanel {
       if (checkbox) checkbox.checked = debug;
     });
 
+    state.subscribe('collectMode', (mode) => {
+      const select = document.getElementById('tp-collect-mode-select');
+      if (select) select.value = mode;
+    });
+
     state.subscribe('lastScores', (history) => {
       this.updateHistoryList(history);
     });
@@ -52,6 +57,13 @@ class TeacherPanel {
               <option value="${LEVELS.EASY}">ง่าย (เลข 1 - 3)</option>
               <option value="${LEVELS.NORMAL}">ปกติ (เลข 1 - 5)</option>
               <option value="${LEVELS.HARD}">เก่งมาก (เลข 1 - 10)</option>
+            </select>
+          </div>
+          <div class="tp-form-group">
+            <label for="tp-collect-mode-select">วิธีเก็บผลไม้:</label>
+            <select id="tp-collect-mode-select" class="tp-select">
+              <option value="gesture">ยกมือขวาเพื่อเก็บ</option>
+              <option value="auto">เก็บอัตโนมัติเมื่อตะกร้าตรงผลไม้</option>
             </select>
           </div>
         </div>
@@ -154,6 +166,12 @@ class TeacherPanel {
       }
     });
 
+    const collectModeSelect = document.getElementById('tp-collect-mode-select');
+    collectModeSelect.addEventListener('change', (e) => {
+      audioManager.playSound('click');
+      state.set({ collectMode: e.target.value });
+    });
+
     soundToggle.addEventListener('change', (e) => {
       state.set({ soundEnabled: e.target.checked });
       audioManager.playSound('click');
@@ -216,8 +234,8 @@ class TeacherPanel {
               fruitCountGame.stop();
               audioManager.speak("หยุดเล่นชั่วคราว");
             } else {
-              fruitCountGame.loop();
               state.set({ gameRunning: true });
+              fruitCountGame.loop();
               audioManager.speak("เล่นต่อจ้า");
             }
           }

@@ -5,9 +5,9 @@ class AudioManager {
     this.ctx = null;
     this.speechSynth = window.speechSynthesis || null;
     this.englishVoice = null;
-    this.currentThaiAudio = null; // Audio element for Google TTS
+    this.currentThaiAudio = null;
 
-    // Load English voice only (for EN mode fallback)
+    // Load English voice for EN mode
     if (this.speechSynth) {
       const loadVoices = () => {
         const voices = this.speechSynth.getVoices();
@@ -24,28 +24,22 @@ class AudioManager {
   }
 
   _findEnglishVoice(voices) {
-    // 1. Prefer Google US English online
     let v = voices.find(v => v.lang.toLowerCase().startsWith('en-us') && v.name.includes('Google'));
-    // 2. Any en-US
     if (!v) v = voices.find(v => v.lang.toLowerCase().startsWith('en-us'));
-    // 3. en-GB
     if (!v) v = voices.find(v => v.lang.toLowerCase().startsWith('en-gb'));
-    // 4. Any English
     if (!v) v = voices.find(v => v.lang.toLowerCase().startsWith('en'));
     return v || null;
   }
 
-  // Debug: list all available voices to console
   listVoices() {
     const voices = this.speechSynth ? this.speechSynth.getVoices() : [];
     console.log('=== Available Voices ===');
     voices.forEach((v, i) => console.log(`[${i}] ${v.name} | ${v.lang} | local:${v.localService}`));
     console.log(`English voice: ${this.englishVoice ? this.englishVoice.name + ' / ' + this.englishVoice.lang : 'NONE'}`);
-    console.log(`Thai voice: Using Google Translate TTS (no local install needed)`);
+    console.log(`Thai voice: Using Google Translate TTS (tw-ob client)`);
     return voices;
   }
 
-  // Lazy-initialize audio context on user interaction
   initContext() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -74,7 +68,6 @@ class AudioManager {
         gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
         osc.start(now); osc.stop(now + 0.08);
         break;
-
       case 'pick':
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(250, now);
@@ -83,7 +76,6 @@ class AudioManager {
         gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
         osc.start(now); osc.stop(now + 0.12);
         break;
-
       case 'correct':
         osc.type = 'sine';
         osc.frequency.setValueAtTime(523.25, now);
@@ -93,7 +85,6 @@ class AudioManager {
         gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
         osc.start(now); osc.stop(now + 0.25);
         break;
-
       case 'completion':
         osc.type = 'sine';
         osc.frequency.setValueAtTime(523.25, now);
@@ -105,7 +96,6 @@ class AudioManager {
         gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
         osc.start(now); osc.stop(now + 0.6);
         break;
-
       case 'incorrect':
         osc.type = 'sine';
         osc.frequency.setValueAtTime(300, now);
@@ -117,9 +107,10 @@ class AudioManager {
     }
   }
 
-  // ─── Thai TTS via Google Translate Audio ───────────────────────────────────
-  // Uses the publicly accessible Google Translate TTS endpoint.
-  // Works on any device without needing Thai language packs installed.
+  // ── Thai TTS: try multiple Google Translate URL formats ─────────────────
+  // client=tw-ob  → Google Translate website's own client (most reliable)
+  // client=t      → alternative Google Translate client
+  // Final fallback → Web Speech API (may produce silence if no th voice)
   _speakThai(text) {
     // Stop any currently playing Thai audio
     if (this.currentThaiAudio) {
@@ -127,85 +118,78 @@ class AudioManager {
       this.currentThaiAudio.src = '';
       this.currentThaiAudio = null;
     }
+    if (this.speechSynth) this.speechSynth.cancel();
 
-    // Split into ≤200-char chunks (Google TTS limit per request)
-    const chunks = [];
-    let remaining = text;
-    while (remaining.length > 0) {
-      // Try to break at sentence boundaries (period, exclamation, space)
-      let cutAt = Math.min(200, remaining.length);
-      if (cutAt < remaining.length) {
-        const lastBreak = Math.max(
-          remaining.lastIndexOf('!', cutAt),
-          remaining.lastIndexOf(' ', cutAt)
-        );
-        if (lastBreak > 100) cutAt = lastBreak + 1;
-      }
-      chunks.push(remaining.slice(0, cutAt).trim());
-      remaining = remaining.slice(cutAt).trim();
-    }
+    const q   = encodeURIComponent(text);
+    const len = text.length;
 
-    // Play chunks sequentially
-    let chunkIdx = 0;
-    const playNextChunk = () => {
-      if (chunkIdx >= chunks.length) return;
-      const chunk = chunks[chunkIdx++];
-      if (!chunk) { playNextChunk(); return; }
+    // Ordered list of TTS URL strategies to try
+    const urls = [
+      // ① tw-ob on translate.google.com — same endpoint as the real website
+      `https://translate.google.com/translate_tts?ie=UTF-8&q=${q}&tl=th&client=tw-ob&prev=input&total=1&idx=0&textlen=${len}`,
+      // ② Alternate client on translate.google.com
+      `https://translate.google.com/translate_tts?ie=UTF-8&q=${q}&tl=th&client=t&prev=input&total=1&idx=0&textlen=${len}`,
+      // ③ googleapis.com fallback with tw-ob
+      `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${q}&tl=th&client=tw-ob&textlen=${len}`,
+    ];
 
-      const url = `https://translate.googleapis.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(chunk)}&tl=th&client=gtx&ttsspeed=0.9`;
-      const audio = new Audio(url);
-      audio.volume = 1.0;
-      this.currentThaiAudio = audio;
+    let urlIdx = 0;
 
-      audio.onended = playNextChunk;
-      audio.onerror = (e) => {
-        console.warn('Google TTS fetch failed, falling back to Web Speech:', e);
-        // Hard fallback: use Web Speech with no voice (browser default)
+    const tryNext = () => {
+      if (urlIdx >= urls.length) {
+        // Last resort — Web Speech API (no Thai voice = likely silent, but won't crash)
+        console.warn('[TTS] All Google TTS URLs failed. Trying Web Speech API.');
         if (this.speechSynth) {
-          this.speechSynth.cancel();
-          const utt = new SpeechSynthesisUtterance(chunks.slice(chunkIdx - 1).join(' '));
+          const utt = new SpeechSynthesisUtterance(text);
           utt.lang = 'th-TH';
-          utt.rate = 0.9;
+          utt.rate = 0.85;
           this.speechSynth.speak(utt);
         }
+        return;
+      }
+
+      const url   = urls[urlIdx++];
+      const audio = new Audio(url);
+      this.currentThaiAudio = audio;
+
+      // Guard flag: prevent both onerror and play().catch from both triggering tryNext
+      let failed = false;
+      const onFail = (reason) => {
+        if (failed) return;
+        failed = true;
+        console.warn(`[TTS] URL #${urlIdx} failed (${reason}), trying next…`);
+        audio.src = '';
+        tryNext();
       };
 
-      audio.play().catch(err => {
-        console.warn('Audio.play() blocked:', err);
-      });
+      audio.onerror    = ()  => onFail('onerror');
+      audio.play().catch(e => onFail(e.message || 'play() rejected'));
     };
 
-    playNextChunk();
+    tryNext();
   }
 
-  // ─── English TTS via Web Speech API ───────────────────────────────────────
+  // ── English TTS: Web Speech API ─────────────────────────────────────────
   _speakEnglish(text) {
     if (!this.speechSynth) return;
     this.speechSynth.cancel();
-
-    // Re-lookup if not found yet
     if (!this.englishVoice) {
       this.englishVoice = this._findEnglishVoice(this.speechSynth.getVoices());
     }
-
     const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'en-US';
-    utt.rate = 0.95;
+    utt.lang  = 'en-US';
+    utt.rate  = 0.95;
     utt.pitch = 1.0;
     if (this.englishVoice) utt.voice = this.englishVoice;
     this.speechSynth.speak(utt);
   }
 
-  // ─── Public API: speak(textTh, textEn) ────────────────────────────────────
-  // textEn is optional. If voiceLang === 'th' → uses Google Translate TTS (Thai).
-  // If voiceLang === 'en' and textEn provided → uses Web Speech API (English).
+  // ── Public API ───────────────────────────────────────────────────────────
   speak(textTh, textEn) {
     if (!state.get('soundEnabled')) return;
-
     const lang = state.get('voiceLang') || 'th';
 
     if (lang === 'en' && textEn) {
-      // Cancel any playing Thai audio first
       if (this.currentThaiAudio) {
         this.currentThaiAudio.pause();
         this.currentThaiAudio.src = '';
@@ -213,8 +197,6 @@ class AudioManager {
       }
       this._speakEnglish(textEn);
     } else {
-      // Cancel any Web Speech
-      if (this.speechSynth) this.speechSynth.cancel();
       this._speakThai(textTh);
     }
   }

@@ -1,0 +1,28 @@
+/* Responsive styles for TV, Projectors, and Monitors (forcing 16:9) */
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #212529; /* Dark border outside the game scale */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#app-container {
+  /* Scale transform is driven by main.js, we set origins and positions here */
+  position: relative;
+  transform-origin: center center;
+  flex-shrink: 0;
+  transition: transform 0.1s ease-out;
+}
+
+/* Fallback for ultra-small screens or custom devices if no JS scaling */
+@media (max-width: 1024px), (max-height: 576px) {
+  #app-container {
+    border-radius: 0; /* Fullscreen edge-to-edge fallback */
+  }
+}

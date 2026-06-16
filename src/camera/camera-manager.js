@@ -1,0 +1,73 @@
+import { state } from '../app/state.js';
+
+class CameraManager {
+  constructor() {
+    this.videoElement = null;
+    this.stream = null;
+  }
+
+  async init(videoElement) {
+    this.videoElement = videoElement;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      state.set({ cameraPermission: 'denied', cameraReady: false });
+      throw new Error('Webcam not supported by this browser.');
+    }
+  }
+
+  async startCamera() {
+    if (this.stream) {
+      return this.stream;
+    }
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user'
+        },
+        audio: false // Privacy: no audio recorded
+      });
+
+      if (this.videoElement) {
+        this.videoElement.srcObject = this.stream;
+        // Wait for video metadata to load
+        await new Promise((resolve) => {
+          this.videoElement.onloadedmetadata = () => {
+            this.videoElement.play();
+            resolve();
+          };
+        });
+      }
+
+      state.set({
+        cameraPermission: 'granted',
+        cameraReady: true,
+        cameraActive: true
+      });
+
+      return this.stream;
+    } catch (error) {
+      console.warn('Camera access denied or failed:', error);
+      state.set({
+        cameraPermission: 'denied',
+        cameraReady: false,
+        cameraActive: false
+      });
+      throw error;
+    }
+  }
+
+  stopCamera() {
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+    if (this.videoElement) {
+      this.videoElement.srcObject = null;
+    }
+    state.set({ cameraActive: false });
+  }
+}
+
+export const cameraManager = new CameraManager();

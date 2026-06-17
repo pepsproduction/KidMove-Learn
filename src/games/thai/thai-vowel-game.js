@@ -304,7 +304,7 @@ class ThaiVowelBubbleGame extends BaseGame {
     });
 
     // Draw wrists for debug/feedback
-    const landmarks = inputAdapter.getRawLandmarks();
+    const landmarks = inputAdapter.getInput(performance.now()).landmarks;
     if (landmarks) {
       const l = landmarks[15];
       const r = landmarks[16];

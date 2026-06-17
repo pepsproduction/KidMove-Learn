@@ -9,8 +9,8 @@ export const THAI_VOWEL_CONFIG = {
 
   // Bubble settings
   bubbleBaseRadius: 40,
-  bubbleSpeedBaseY: 1.5,
-  bubbleSpeedMaxY: 3.5,
+  bubbleSpeedBaseY: 2.5,
+  bubbleSpeedMaxY: 4.5,
   bubbleWobbleSpeed: 0.05,
   bubbleWobbleAmount: 20,
   

@@ -157,15 +157,15 @@ class ThaiVowelBubbleGame extends BaseGame {
 
       this.bubbles.forEach(bubble => {
         if (bubble.popped) {
-          bubble.popProgress += dt * 0.05;
+          bubble.popProgress += (dt * 60) * 0.05;
           return;
         }
         
         allBubblesGone = false;
 
-        bubble.y -= this.config.bubbleSpeedBaseY * speedMult * (dt / 16);
+        bubble.y -= this.config.bubbleSpeedBaseY * speedMult * (dt * 60);
         
-        bubble.phase += this.config.bubbleWobbleSpeed * (dt / 16);
+        bubble.phase += this.config.bubbleWobbleSpeed * (dt * 60);
         const wobbleX = Math.sin(bubble.phase) * this.config.bubbleWobbleAmount;
         const currentX = bubble.x + wobbleX;
         

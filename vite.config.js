@@ -9,9 +9,10 @@ export default defineConfig({
   publicDir: '../public',
   
   build: {
-    // Match the GitHub Pages workflow, which deploys the dist directory.
-    outDir: '../dist',
-    emptyOutDir: true,
+    // Output built files directly to the repository root directory
+    outDir: '../',
+    // Critical: Do NOT clear the root directory, otherwise it will delete source files!
+    emptyOutDir: false,
   },
   server: {
     port: 3000,

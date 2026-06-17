@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KidMove Learn - สวนผลไม้นับเลขแสนสนุก</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="KidMove Learn เว็บเกมเรียนรู้เสริมพัฒนาการสำหรับเด็กปฐมวัย 4-6 ขวบ ใช้กล้อง Webcam จับการเคลื่อนไหวของร่างกาย เล่นสนุก ปลอดภัย ไม่เก็บข้อมูลเด็ก">
+  <meta name="keywords" content="เกมเด็ก, ตรวจจับท่าทาง, นวัตกรรมการเรียนรู้, สื่อการสอนปฐมวัย, MediaPipe, โคดดิ้งสำหรับเด็ก">
+  <meta name="author" content="KidMove Learn team">
+
+  <!-- Core Stylesheets -->
+  <script type="module" crossorigin src="./assets/index-CbwwNTSY.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DCI7oe7X.css">
+</head>
+<body>
+
+  <!-- Game Container locked to 16:9 aspect ratio -->
+  <div id="app-container">
+    
+    <!-- Screens -->
+    <div id="screen-home" class="screen">
+      <!-- Injected by home-screen.js -->
+    </div>
+
+    <div id="screen-subject-select" class="screen hidden">
+      <!-- Injected by subject-screen.js -->
+    </div>
+
+    <div id="screen-calibration" class="screen hidden">
+      <div class="cal-layout">
+        <button id="btn-calibration-back" class="btn-back">⬅ ย้อนกลับ</button>
+        <div class="cal-canvas-container">
+          <!-- The camera and overlay canvas will sit here during calibration -->
+          <div id="calibration-box-anchor"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-game-play" class="screen hidden">
+      <div class="game-layout">
+        <!-- Floating anchor for small camera thumbnail -->
+        <div id="game-camera-anchor"></div>
+        <!-- Main Game Loop Canvas -->
+        <canvas id="game-canvas" width="800" height="500"></canvas>
+      </div>
+    </div>
+
+    <div id="screen-results" class="screen hidden">
+      <!-- Injected by result-screen.js -->
+    </div>
+
+    <div id="screen-preview" class="screen hidden">
+      <!-- Injected by preview-screen.js -->
+    </div>
+
+    <!-- Persistent Teacher Button (Floating on the side/top) -->
+    <button id="floating-teacher-btn" class="floating-btn" title="แผงควบคุมคุณครู">👩‍🏫 โหมดคุณครู</button>
+
+    <!-- Slide-out Teacher Panel -->
+    <div id="teacher-panel-sidebar" class="tp-sidebar">
+      <!-- Injected by teacher-panel.js -->
+    </div>
+
+    <!-- Unified Video & Canvas Tracker (Gets reparented by JS depending on state) -->
+    <div id="unified-camera-container" class="camera-hidden">
+      <video id="camera-video" autoplay playsinline muted></video>
+      <canvas id="camera-overlay"></canvas>
+      <div id="camera-loading-spinner" class="spinner">กำลังโหลดตรวจจับร่างกาย...</div>
+    </div>
+
+  </div>
+
+  <!-- App Entry Point -->
+</body>
+</html>

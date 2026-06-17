@@ -2,6 +2,7 @@ export const SCREENS = {
   HOME: 'home',
   SUBJECT_SELECT: 'subject-select',
   MATH_GAME_SELECT: 'math-game-select',
+  THAI_GAME_SELECT: 'thai-game-select',
   GAME_SETUP: 'game-setup',
   CALIBRATION: 'calibration',
   GAME_PLAY: 'game-play',
@@ -49,6 +50,7 @@ export const INPUT_MODES = {
 export const GAME_IDS = {
   FRUIT_COUNT: 'fruit-count',
   MATH_JUMP_ANSWER: 'math-jump-answer',
+  THAI_LETTER_HOME: 'thai-letter-home',
   BUBBLE_VOWEL: 'bubble-vowel',
   WORD_CATCH: 'word-catch'
 };

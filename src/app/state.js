@@ -35,6 +35,18 @@ class StateStore {
       questionFruit: null,
       fruitsPicked: 0,
       activeRoundsPlayed: 0,
+      correctAnswers: 0,
+      wrongAnswers: 0,
+      timeoutAnswers: 0,
+      
+      // Thai Game State
+      thaiQuestion: null,
+      thaiChoices: [],
+      thaiCorrectLetter: null,
+      thaiSelectedChoice: null,
+      thaiTimeLeft: 10,
+      thaiAnswered: false,
+      thaiAnswerResult: null,
       
       // History (localStorage)
       lastScores: persisted.lastScores || []

@@ -34,8 +34,8 @@ class SubjectScreen {
           <div id="card-thai" class="subject-card active-card btn-bounce">
             <div class="subject-emoji">🇹🇭</div>
             <h3>ภาษาไทย</h3>
-            <p>เป่าฟองสบู่พยัญชนะ ก-ฮ</p>
-            <div class="subject-status" style="background-color: #868e96; color: white;">(เตรียมพบกันเร็วๆ นี้)</div>
+            <p>ฝึกอ่านเขียนพยัญชนะไทยสนุกๆ</p>
+            <div class="subject-status active-status">พร้อมเล่น!</div>
           </div>
 
           <!-- English subject: active placeholder preview -->
@@ -72,10 +72,9 @@ class SubjectScreen {
     thaiCard.addEventListener('click', () => {
       audioManager.playSound('click');
       state.set({
-        activeSubject: SUBJECTS.THAI,
-        activeGameId: 'bubble-vowel'
+        activeSubject: SUBJECTS.THAI
       });
-      navigateTo(SCREENS.PREVIEW);
+      navigateTo(SCREENS.THAI_GAME_SELECT);
     });
 
     englishCard.addEventListener('click', () => {

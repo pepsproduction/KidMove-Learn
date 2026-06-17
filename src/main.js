@@ -14,6 +14,7 @@ import { navigateTo } from './app/screen-machine.js';
 import { audioManager } from './utils/audio-manager.js';
 import { fullscreenManager } from './app/fullscreen-manager.js';
 import { mathGameSelectScreen } from './ui/math-game-select-screen.js';
+import { thaiGameSelectScreen } from './ui/thai-game-select-screen.js';
 import { gameSetupScreen } from './ui/game-setup-screen.js';
 import { GAME_IDS } from './app/constants.js';
 
@@ -44,6 +45,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   teacherPanel.init(document.getElementById('teacher-panel-sidebar'));
   previewScreen.init(document.getElementById('screen-preview'));
   mathGameSelectScreen.init(document.getElementById('screen-math-game-select'));
+  thaiGameSelectScreen.init(document.getElementById('screen-thai-game-select'));
   gameSetupScreen.init(document.getElementById('screen-game-setup'));
   
   // Setup router
@@ -66,12 +68,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     sidebar.classList.toggle('open');
   });
 
-  // Back button on calibration screen - route back based on current game
   const calBackBtn = document.getElementById('btn-calibration-back');
   calBackBtn.addEventListener('click', () => {
     audioManager.playSound('click');
     const gameId = state.get('activeGameId');
-    if (gameId === GAME_IDS.MATH_JUMP_ANSWER) {
+    if (gameId === GAME_IDS.MATH_JUMP_ANSWER || gameId === GAME_IDS.THAI_LETTER_HOME) {
       navigateTo(SCREENS.GAME_SETUP);
     } else if (gameId === GAME_IDS.FRUIT_COUNT) {
       navigateTo(SCREENS.MATH_GAME_SELECT);

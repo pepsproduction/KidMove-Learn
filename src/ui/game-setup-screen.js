@@ -3,19 +3,71 @@ import { SCREENS, LEVELS } from '../app/constants.js';
 import { navigateTo } from '../app/screen-machine.js';
 import { audioManager } from '../utils/audio-manager.js';
 import { MATH_JUMP_ANSWER_CONFIG } from '../games/math/math-jump-answer-config.js';
-import { getQuestionCountForLevel } from '../games/math/math-jump-answer-content.js';
+import { getQuestionCountForLevel as getMathQuestionCount } from '../games/math/math-jump-answer-content.js';
+import { THAI_LETTER_HOME_CONFIG } from '../games/thai/thai-letter-home-config.js';
+import { getQuestionCountForThaiLevel } from '../games/thai/thai-letter-home-content.js';
+import { GAME_IDS, SUBJECTS } from '../app/constants.js';
 
 class GameSetupScreen {
   constructor() {
     this.container = null;
     this.selectedDifficulty = LEVELS.EASY;
-    this.selectedTimer = MATH_JUMP_ANSWER_CONFIG.defaultTimerSeconds;
+    this.selectedTimer = 10;
+    this.unsubscribe = null;
+  }
+
+  get activeConfig() {
+    return state.get('activeGameId') === GAME_IDS.THAI_LETTER_HOME 
+      ? THAI_LETTER_HOME_CONFIG 
+      : MATH_JUMP_ANSWER_CONFIG;
   }
 
   init(containerElement) {
     this.container = containerElement;
     this.render();
     this.bindEvents();
+
+    this.unsubscribe = state.subscribe('currentScreen', (screen) => {
+      if (screen === SCREENS.GAME_SETUP) {
+        this.onShowSetup();
+      }
+    });
+  }
+
+  onShowSetup() {
+    this.selectedDifficulty = LEVELS.EASY;
+    
+    // Set default timer based on game config
+    const config = this.activeConfig;
+    if (typeof config.defaultTimerSeconds === 'number') {
+      this.selectedTimer = config.defaultTimerSeconds;
+    } else if (config.defaultTimerSeconds && config.defaultTimerSeconds[this.selectedDifficulty]) {
+      this.selectedTimer = config.defaultTimerSeconds[this.selectedDifficulty];
+    } else {
+      this.selectedTimer = 10;
+    }
+    
+    this.updateUI();
+    this.updateTimerDisplay();
+    
+    // Reset selected difficulty button
+    const diffBtns = document.querySelectorAll('.diff-btn');
+    diffBtns.forEach(b => b.classList.remove('selected-diff'));
+    document.getElementById('btn-diff-easy').classList.add('selected-diff');
+  }
+
+  updateUI() {
+    const titleEl = document.getElementById('setup-title');
+    const subtitleEl = document.getElementById('setup-subtitle');
+    const gameId = state.get('activeGameId');
+
+    if (gameId === GAME_IDS.THAI_LETTER_HOME) {
+      titleEl.innerHTML = '🏠 บ้านพยัญชนะ ก-ฮ';
+      subtitleEl.innerHTML = 'ดูภาพ ฟังเสียง แล้วเลือกบ้านพยัญชนะให้ถูก';
+    } else {
+      titleEl.innerHTML = '🦘 กระโดดตอบบวกลบ';
+      subtitleEl.innerHTML = 'ตั้งค่าเกมก่อนเริ่มเล่น';
+    }
   }
 
   render() {
@@ -23,8 +75,8 @@ class GameSetupScreen {
       <div class="setup-content-wrapper">
         <button id="btn-setup-back" class="btn-back">⬅ ย้อนกลับ</button>
         
-        <h2 class="screen-title">🦘 กระโดดตอบบวกลบ</h2>
-        <p class="setup-subtitle">ตั้งค่าเกมก่อนเริ่มเล่น</p>
+        <h2 id="setup-title" class="screen-title">🦘 กระโดดตอบบวกลบ</h2>
+        <p id="setup-subtitle" class="setup-subtitle">ตั้งค่าเกมก่อนเริ่มเล่น</p>
         
         <div class="setup-options-grid">
           <div class="setup-section">
@@ -70,7 +122,13 @@ class GameSetupScreen {
 
     backBtn.addEventListener('click', () => {
       audioManager.playSound('click');
-      navigateTo(SCREENS.MATH_GAME_SELECT);
+      if (state.get('activeSubject') === SUBJECTS.THAI) {
+        navigateTo(SCREENS.THAI_GAME_SELECT);
+      } else if (state.get('activeSubject') === SUBJECTS.MATH) {
+        navigateTo(SCREENS.MATH_GAME_SELECT);
+      } else {
+        navigateTo(SCREENS.SUBJECT_SELECT);
+      }
     });
 
     diffBtns.forEach(btn => {
@@ -79,28 +137,43 @@ class GameSetupScreen {
         diffBtns.forEach(b => b.classList.remove('selected-diff'));
         btn.classList.add('selected-diff');
         this.selectedDifficulty = btn.dataset.level;
+        
+        const config = this.activeConfig;
+        if (typeof config.defaultTimerSeconds === 'object') {
+          this.selectedTimer = config.defaultTimerSeconds[this.selectedDifficulty];
+          this.updateTimerDisplay();
+        }
       });
     });
 
     timerMinus.addEventListener('click', () => {
       audioManager.playSound('click');
-      if (this.selectedTimer > MATH_JUMP_ANSWER_CONFIG.minTimerSeconds) {
-        this.selectedTimer -= MATH_JUMP_ANSWER_CONFIG.timerStepSeconds;
+      const config = this.activeConfig;
+      if (this.selectedTimer > config.minTimerSeconds) {
+        this.selectedTimer -= config.timerStepSeconds;
         this.updateTimerDisplay();
       }
     });
 
     timerPlus.addEventListener('click', () => {
       audioManager.playSound('click');
-      if (this.selectedTimer < MATH_JUMP_ANSWER_CONFIG.maxTimerSeconds) {
-        this.selectedTimer += MATH_JUMP_ANSWER_CONFIG.timerStepSeconds;
+      const config = this.activeConfig;
+      if (this.selectedTimer < config.maxTimerSeconds) {
+        this.selectedTimer += config.timerStepSeconds;
         this.updateTimerDisplay();
       }
     });
 
     startBtn.addEventListener('click', () => {
       audioManager.playSound('click');
-      const questionCount = getQuestionCountForLevel(this.selectedDifficulty);
+      
+      let questionCount = 5;
+      if (state.get('activeGameId') === GAME_IDS.THAI_LETTER_HOME) {
+        questionCount = getQuestionCountForThaiLevel(this.selectedDifficulty);
+      } else {
+        questionCount = getMathQuestionCount(this.selectedDifficulty);
+      }
+
       state.set({
         level: this.selectedDifficulty,
         gameSettings: {

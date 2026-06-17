@@ -81,9 +81,9 @@ class ResultScreen {
 
     // Determine how many stars to award
     let starCount;
-    if (gameId === GAME_IDS.MATH_JUMP_ANSWER) {
+    if (gameId === GAME_IDS.MATH_JUMP_ANSWER || gameId === GAME_IDS.THAI_LETTER_HOME) {
       const correct = state.get('correctAnswers') || 0;
-      const total = state.get('totalQuestions') || this.totalQuestions || 5;
+      const total = state.get('gameSettings')?.questionCount || 5;
       const ratio = total > 0 ? correct / total : 0;
       starCount = Math.max(1, Math.min(5, Math.ceil(ratio * 5)));
 
@@ -131,7 +131,7 @@ class ResultScreen {
     playAgainBtn.onclick = () => {
       audioManager.playSound('click');
       const gameId = state.get('activeGameId');
-      if (gameId === GAME_IDS.MATH_JUMP_ANSWER) {
+      if (gameId === GAME_IDS.MATH_JUMP_ANSWER || gameId === GAME_IDS.THAI_LETTER_HOME) {
         navigateTo(SCREENS.GAME_SETUP);
       } else {
         navigateTo(SCREENS.CALIBRATION);

@@ -118,7 +118,13 @@ class Calibration {
               state.set({ calibrationDone: true });
               
               audioManager.playSound('completion');
-              audioManager.speak("เก่งมากจ้า! เริ่มเกมคณิตศาสตร์แสนสนุกกันเลย!", "Well done! Let's start the fun math game!");
+              
+              const subject = state.get('activeSubject');
+              if (subject === 'thai') {
+                audioManager.speak("เก่งมากจ้า! มาเริ่มเล่นเกมภาษาไทยกันเลย!", "Well done! Let's start the Thai game!");
+              } else {
+                audioManager.speak("เก่งมากจ้า! เริ่มเกมคณิตศาสตร์แสนสนุกกันเลย!", "Well done! Let's start the fun math game!");
+              }
               
               this.calibrationTimeout = setTimeout(() => {
                 this.calibrationTimeout = null;

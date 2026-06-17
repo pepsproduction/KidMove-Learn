@@ -1,6 +1,7 @@
 import { SUBJECTS, GAME_IDS } from './constants.js';
 import { fruitCountGame } from '../games/math/fruit-count-game.js';
 import { mathJumpAnswerGame } from '../games/math/math-jump-answer-game.js';
+import { thaiLetterHomeGame } from '../games/thai/thai-letter-home-game.js';
 
 /**
  * Game Registry mapping subjects to their available games and default configuration.
@@ -28,9 +29,9 @@ export const gameRegistry = {
     }
   },
   [SUBJECTS.THAI]: {
-    defaultGameId: 'bubble-vowel', // Placeholder for future Thai game
+    defaultGameId: GAME_IDS.THAI_LETTER_HOME,
     games: {
-      // TODO: Add registered game classes here once implemented
+      [GAME_IDS.THAI_LETTER_HOME]: thaiLetterHomeGame
     }
   },
   [SUBJECTS.ENGLISH]: {

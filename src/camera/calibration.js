@@ -12,6 +12,7 @@ class Calibration {
     this.animationId = null;
     this.holdTimer = 0;
     this.lastFrameTime = 0;
+    this.calibrationTimeout = null;
   }
 
   init(canvasElement, videoElement) {
@@ -37,6 +38,10 @@ class Calibration {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
+    }
+    if (this.calibrationTimeout) {
+      clearTimeout(this.calibrationTimeout);
+      this.calibrationTimeout = null;
     }
   }
 
@@ -104,8 +109,11 @@ class Calibration {
               audioManager.playSound('completion');
               audioManager.speak("เก่งมากจ้า! เริ่มเกมคณิตศาสตร์แสนสนุกกันเลย!", "Well done! Let's start the fun math game!");
               
-              setTimeout(() => {
-                state.set({ currentScreen: SCREENS.GAME_PLAY });
+              this.calibrationTimeout = setTimeout(() => {
+                this.calibrationTimeout = null;
+                if (state.get('currentScreen') === SCREENS.CALIBRATION) {
+                  state.set({ currentScreen: SCREENS.GAME_PLAY });
+                }
               }, 1000);
               
               this.stop();

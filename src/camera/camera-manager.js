@@ -30,13 +30,19 @@ class CameraManager {
       });
 
       if (this.videoElement) {
-        this.videoElement.srcObject = this.stream;
-        // Wait for video metadata to load
         await new Promise((resolve) => {
           this.videoElement.onloadedmetadata = () => {
-            this.videoElement.play();
+            this.videoElement.play().catch(err => console.warn("Video play failed:", err));
             resolve();
           };
+          
+          this.videoElement.srcObject = this.stream;
+          
+          // Fallback in case metadata loaded synchronously
+          if (this.videoElement.readyState >= 1) {
+            this.videoElement.play().catch(err => console.warn("Video play failed synchronously:", err));
+            resolve();
+          }
         });
       }
 

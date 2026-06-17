@@ -6,36 +6,44 @@ class PoseDetector {
     this.poseLandmarker = null;
     this.isLoading = false;
     this.initialized = false;
+    this.loadPromise = null;
   }
 
   async init() {
-    if (this.initialized || this.isLoading) return;
+    if (this.initialized) return;
+    if (this.isLoading && this.loadPromise) return this.loadPromise;
 
     this.isLoading = true;
-    try {
-      // Initialize resolver and landmarker using CDN files for reliability and cache performance
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
-      );
+    this.loadPromise = (async () => {
+      try {
+        // Initialize resolver and landmarker using CDN files for reliability and cache performance
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
+        );
 
-      this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-          delegate: "GPU"
-        },
-        runningMode: "VIDEO",
-        numPoses: 1
-      });
+        this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numPoses: 1
+        });
 
-      this.initialized = true;
-      this.isLoading = false;
-      console.log("MediaPipe Pose Landmarker loaded successfully.");
-    } catch (error) {
-      this.isLoading = false;
-      console.error("Failed to load MediaPipe Pose Landmarker:", error);
-      // Let the app know that pose detection failed to load (will fallback to keyboard)
-      state.set({ cameraReady: false });
-    }
+        this.initialized = true;
+        console.log("MediaPipe Pose Landmarker loaded successfully.");
+      } catch (error) {
+        console.error("Failed to load MediaPipe Pose Landmarker:", error);
+        // Let the app know that pose detection failed to load and bubble up to keyboard fallback.
+        state.set({ cameraReady: false });
+        throw error;
+      } finally {
+        this.isLoading = false;
+        if (!this.initialized) this.loadPromise = null;
+      }
+    })();
+
+    return this.loadPromise;
   }
 
   detect(videoElement, timestamp) {

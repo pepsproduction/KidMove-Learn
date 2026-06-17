@@ -64,7 +64,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Watch state.currentScreen to manage webcam and game instances
+  let cameraFallbackTimeout = null;
   state.subscribe('currentScreen', async (screen) => {
+    // Clear any pending camera fallback timeouts immediately on navigation
+    if (cameraFallbackTimeout) {
+      clearTimeout(cameraFallbackTimeout);
+      cameraFallbackTimeout = null;
+    }
+
     // Hide float teacher button when in game for UI cleanliness, show otherwise
     if (screen === SCREENS.GAME_PLAY) {
       floatingTeacherBtn.style.display = 'none';
@@ -106,8 +113,11 @@ window.addEventListener('DOMContentLoaded', async () => {
         });
         audioManager.speak("ไม่พบกล้องจ้า สามารถเล่นผ่านคีย์บอร์ดโดยใช้ลูกศรซ้ายขวาและปุ่มเอ็นเทอร์ได้เลยนะ", "No camera detected. You can play using the left and right arrow keys and the Enter key.");
         
-        setTimeout(() => {
-          state.set({ currentScreen: SCREENS.GAME_PLAY });
+        cameraFallbackTimeout = setTimeout(() => {
+          cameraFallbackTimeout = null;
+          if (state.get('currentScreen') === SCREENS.CALIBRATION) {
+            state.set({ currentScreen: SCREENS.GAME_PLAY });
+          }
         }, 3000);
       }
     } 

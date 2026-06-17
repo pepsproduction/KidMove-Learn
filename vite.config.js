@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
 
 export default defineConfig({
   // Set the root to the 'src' directory so development runs there
@@ -10,10 +9,9 @@ export default defineConfig({
   publicDir: '../public',
   
   build: {
-    // Output built files directly to the repository root directory
-    outDir: '../',
-    // Critical: Do NOT clear the root directory, otherwise it will delete source files!
-    emptyOutDir: false,
+    // Match the GitHub Pages workflow, which deploys the dist directory.
+    outDir: '../dist',
+    emptyOutDir: true,
   },
   server: {
     port: 3000,

@@ -25,6 +25,8 @@ class FruitCountGame {
 
     // Audio/Speech state
     this.hasAnnouncedQuestion = false;
+    this.isQuestionTransitioning = false;
+    this.transitionTimeout = null;
 
     // Keyboard control states
     this.keys = {
@@ -74,6 +76,11 @@ class FruitCountGame {
       fruitsPicked: 0
     });
 
+    if (this.transitionTimeout) {
+      clearTimeout(this.transitionTimeout);
+      this.transitionTimeout = null;
+    }
+
     this.basketX = MATH_GAME_CONFIG.canvasWidth / 2;
     this.basketTargetX = MATH_GAME_CONFIG.canvasWidth / 2;
     this.fruits = [];
@@ -90,6 +97,10 @@ class FruitCountGame {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
       this.animationId = null;
+    }
+    if (this.transitionTimeout) {
+      clearTimeout(this.transitionTimeout);
+      this.transitionTimeout = null;
     }
   }
 
@@ -142,6 +153,11 @@ class FruitCountGame {
 
   // Next Question trigger (from teacher panel)
   skipQuestion() {
+    if (this.transitionTimeout) {
+      clearTimeout(this.transitionTimeout);
+      this.transitionTimeout = null;
+    }
+    this.isQuestionTransitioning = false;
     const currentIdx = state.get('currentQuestionIdx');
     state.set({ currentQuestionIdx: currentIdx + 1 });
     this.generateQuestion();
@@ -277,7 +293,8 @@ class FruitCountGame {
 
               // Delay shortly then load next question smoothly without stopping loop
               this.isQuestionTransitioning = true;
-              setTimeout(() => {
+              this.transitionTimeout = setTimeout(() => {
+                this.transitionTimeout = null;
                 // Check if screen changed while waiting
                 if (state.get('currentScreen') !== SCREENS.GAME_PLAY) return;
 
@@ -567,10 +584,24 @@ class FruitCountGame {
 
       // Fruits counter status circles
       this.ctx.save();
-      const radius = 22;
-      const startX = 400;
-      const startY = 50;
-      const gap = 36;
+      // Dynamically adjust size/gap for larger target counts to prevent overlapping with the HUD boxes
+      const maxAvailableWidth = 260; // Space between Question Box (ends at 340) and Score Box (starts at 640) with safe margins
+      let gap = 36;
+      let radius = 22;
+      let emojiFontSize = 22;
+      let numberFontSize = 14;
+      
+      let totalWidth = (targetCount - 1) * gap;
+      if (totalWidth > maxAvailableWidth) {
+        gap = maxAvailableWidth / (targetCount - 1);
+        radius = Math.max(14, gap * 0.55);
+        emojiFontSize = Math.max(14, radius * 1.0);
+        numberFontSize = Math.max(10, radius * 0.65);
+      }
+      
+      // Center the circles in the space between X=340 and X=640 (midpoint is 490)
+      const startX = 340 + (300 - (targetCount - 1) * gap) / 2;
+      const startY = 60;
       
       for (let c = 0; c < targetCount; c++) {
         const cx = startX + c * gap;
@@ -588,7 +619,7 @@ class FruitCountGame {
           this.ctx.lineWidth = 3;
           this.ctx.stroke();
           
-          this.ctx.font = '22px sans-serif';
+          this.ctx.font = `${Math.floor(emojiFontSize)}px sans-serif`;
           this.ctx.textAlign = 'center';
           this.ctx.textBaseline = 'middle';
           this.ctx.fillText(targetFruitItem.emoji, cx, cy);
@@ -601,7 +632,7 @@ class FruitCountGame {
           this.ctx.stroke();
           
           this.ctx.fillStyle = 'rgba(0,0,0,0.25)';
-          this.ctx.font = "bold 14px sans-serif";
+          this.ctx.font = `bold ${Math.floor(numberFontSize)}px sans-serif`;
           this.ctx.textAlign = 'center';
           this.ctx.textBaseline = 'middle';
           this.ctx.fillText(`${c + 1}`, cx, cy);

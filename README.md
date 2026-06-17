@@ -32,7 +32,7 @@
 kidmove-learn/
 ├─ package.json                   # การจัดการสคริปต์และ Dependency
 ├─ vite.config.js                 # ตั้งค่า Base Path เพื่อให้ Deploy บน GitHub Pages ได้สะดวก
-├─ index.html                     # จุดยึดหลักของแอปพลิเคชัน (Mount Points)
+├─ src/index.html                 # จุดยึดหลักของแอปพลิเคชัน (Mount Points)
 ├─ README.md                      # คำแนะนำโครงการ
 ├─ src/
 │  ├─ main.js                     # จุดเริ่มต้นของแอปพลิเคชัน เชื่อมโยงทุกระบบเข้าด้วยกัน
@@ -69,7 +69,7 @@ kidmove-learn/
 │     ├─ kid-theme.css            # ธีมความสนุก สีสัน แอนิเมชัน และโมดอล
 │     └─ responsive.css           # ล็อคขนาดจอ 16:9 และย่อ/ขยายตามความเหมาะสม
 └─ public/
-   ├─ assets/
+   ├─ assets/                     # ไฟล์ static ที่ Vite จะ copy ไปยัง dist ระหว่าง build
    └─ models/                     # โฟลเดอร์สำรองสำหรับโมเดลออฟไลน์ (ใช้งาน CDN เป็นหลัก)
 ```
 

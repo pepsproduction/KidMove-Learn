@@ -116,7 +116,13 @@ class Calibration {
                 }
               }, 1000);
               
-              this.stop();
+              if (this.animationId) {
+                cancelAnimationFrame(this.animationId);
+                this.animationId = null;
+              }
+              
+              // Draw the final completed UI overlay before freezing the frame
+              this.drawCalibrationOverlay(poseVisible, "ยอดเยี่ยมมาก! ค้างไว้แป๊บนึงนะ...", "#47d147");
               return;
             }
             calibrationText = "ยอดเยี่ยมมาก! ค้างไว้แป๊บนึงนะ...";

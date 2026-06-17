@@ -18,17 +18,27 @@ class Calibration {
 
   init(canvasElement, videoElement) {
     this.canvas = canvasElement;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = canvasElement.getContext('2d');
     this.video = videoElement;
+
+    // Set high-res internal canvas dimensions to prevent blurry/stretched text
+    this.canvas.width = 640;
+    this.canvas.height = 480;
+    
+    this.resetState();
   }
 
-  start() {
+  resetState() {
     state.set({
       calibrationDone: false,
       calibrationProgress: 0
     });
     this.holdTimer = 0;
     gestureEngine.resetBaselines();
+  }
+
+  start() {
+    this.resetState();
     this.loop();
     
     // Play a friendly introductory sound
@@ -115,7 +125,7 @@ class Calibration {
                 if (state.get('currentScreen') === SCREENS.CALIBRATION) {
                   navigateTo(SCREENS.GAME_PLAY);
                 }
-              }, 1000);
+              }, 4000);
               
               if (this.animationId) {
                 cancelAnimationFrame(this.animationId);

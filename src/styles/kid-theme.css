@@ -278,6 +278,146 @@
   margin-top: 10px;
 }
 
+/* Result screen extra stats */
+.result-stats-row {
+  display: flex;
+  gap: 15px;
+  margin-top: -10px;
+  margin-bottom: 5px;
+}
+
+.stat-item {
+  background-color: var(--color-white);
+  padding: 8px 16px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-soft);
+  font-weight: 700;
+  border: 2px solid transparent;
+}
+
+.stat-correct { border-color: #00c853; color: #00c853; }
+.stat-wrong { border-color: #ff1744; color: #ff1744; }
+.stat-timeout { border-color: #ff9100; color: #ff9100; }
+
+.stat-emoji { font-size: 18px; }
+.stat-label { font-size: 14px; color: #868e96; font-weight: normal; }
+
+/* Math Game Select Screen */
+.math-game-cards-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.math-game-cards-grid .subject-card {
+  width: 320px;
+}
+
+/* Game Setup Screen */
+.setup-content-wrapper {
+  width: 90%;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.setup-subtitle {
+  font-size: 20px;
+  color: #495057;
+  margin-top: -20px;
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.setup-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  background-color: var(--color-white);
+  padding: 30px;
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 30px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.setup-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.setup-section-title {
+  font-size: 18px;
+  color: var(--color-ocean);
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.difficulty-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.diff-btn {
+  background-color: #f1f3f5;
+  color: #495057;
+  border: 2px solid transparent;
+  width: 100%;
+}
+
+.diff-btn.selected-diff {
+  background-color: #fff3e0;
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+  box-shadow: 0 4px 10px rgba(255, 169, 77, 0.3);
+  transform: scale(1.02);
+}
+
+.timer-control {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background-color: #f8f9fa;
+  padding: 15px 20px;
+  border-radius: 50px;
+  border: 2px solid #dee2e6;
+}
+
+.timer-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-display {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--color-dark);
+  min-width: 100px;
+}
+
+.setup-actions {
+  margin-top: 10px;
+}
+
 /* Modals */
 .modal {
   position: fixed;

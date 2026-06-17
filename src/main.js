@@ -13,6 +13,9 @@ import { getActiveGame } from './app/game-registry.js';
 import { navigateTo } from './app/screen-machine.js';
 import { audioManager } from './utils/audio-manager.js';
 import { fullscreenManager } from './app/fullscreen-manager.js';
+import { mathGameSelectScreen } from './ui/math-game-select-screen.js';
+import { gameSetupScreen } from './ui/game-setup-screen.js';
+import { GAME_IDS } from './app/constants.js';
 
 // 1. Responsive 16:9 Screen Autoscaler
 function resizeApp() {
@@ -40,6 +43,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   resultScreen.init(document.getElementById('screen-results'));
   teacherPanel.init(document.getElementById('teacher-panel-sidebar'));
   previewScreen.init(document.getElementById('screen-preview'));
+  mathGameSelectScreen.init(document.getElementById('screen-math-game-select'));
+  gameSetupScreen.init(document.getElementById('screen-game-setup'));
   
   // Setup router
   router.init();
@@ -61,11 +66,18 @@ window.addEventListener('DOMContentLoaded', async () => {
     sidebar.classList.toggle('open');
   });
 
-  // Back button on calibration screen
+  // Back button on calibration screen - route back based on current game
   const calBackBtn = document.getElementById('btn-calibration-back');
   calBackBtn.addEventListener('click', () => {
     audioManager.playSound('click');
-    navigateTo(SCREENS.SUBJECT_SELECT);
+    const gameId = state.get('activeGameId');
+    if (gameId === GAME_IDS.MATH_JUMP_ANSWER) {
+      navigateTo(SCREENS.GAME_SETUP);
+    } else if (gameId === GAME_IDS.FRUIT_COUNT) {
+      navigateTo(SCREENS.MATH_GAME_SELECT);
+    } else {
+      navigateTo(SCREENS.SUBJECT_SELECT);
+    }
   });
 
   // Watch state.currentScreen to manage webcam and game instances

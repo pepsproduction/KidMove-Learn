@@ -101,6 +101,12 @@ class FruitCountGame extends BaseGame {
     const textTh = `ข้อที่ ${currentIdx + 1}! ช่วยเก็บ ${fruitType.name} ${targetCount} ลูก ให้ทีนะจ๊ะ`;
     const textEn = `Question number ${currentIdx + 1}! Please collect ${targetCount} ${targetCount > 1 ? fruitType.nameEnPlural : fruitType.nameEn} for me.`;
     audioManager.speak(textTh, textEn);
+
+    // Pause fruit spawning while speaking
+    this.isSpeaking = true;
+    this.setTimeout(() => {
+      this.isSpeaking = false;
+    }, 3500);
   }
 
   /**
@@ -176,7 +182,7 @@ class FruitCountGame extends BaseGame {
     this.basketX += (this.basketTargetX - this.basketX) * MATH_GAME_CONFIG.basketSmoothFactor;
 
     // 3. Spawning Fruits
-    if (!this.isQuestionTransitioning && (now - this.lastSpawnTime > MATH_GAME_CONFIG.spawnIntervalMs)) {
+    if (!this.isQuestionTransitioning && !this.isSpeaking && (now - this.lastSpawnTime > MATH_GAME_CONFIG.spawnIntervalMs)) {
       this.spawnFruit();
       this.lastSpawnTime = now;
     }
@@ -251,7 +257,7 @@ class FruitCountGame extends BaseGame {
                 const currentIdx = state.get('currentQuestionIdx');
                 state.set({ currentQuestionIdx: currentIdx + 1 });
                 this.generateQuestion();
-              }, 1800);
+              }, 3500);
               break;
             } else if (nextPicked > targetCount) {
               // Collected too many!

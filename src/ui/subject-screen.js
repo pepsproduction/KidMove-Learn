@@ -26,7 +26,7 @@ class SubjectScreen {
           <div id="card-math" class="subject-card active-card btn-bounce">
             <div class="subject-emoji">🔢</div>
             <h3>คณิตศาสตร์</h3>
-            <p>สวนผลไม้นับเลข 1-10</p>
+            <p>นับเลข บวก ลบ สนุกสนาน</p>
             <div class="subject-status active-status">พร้อมเล่น!</div>
           </div>
           
@@ -64,10 +64,9 @@ class SubjectScreen {
     mathCard.addEventListener('click', () => {
       audioManager.playSound('click');
       state.set({
-        activeSubject: SUBJECTS.MATH,
-        activeGameId: 'fruit-count'
+        activeSubject: SUBJECTS.MATH
       });
-      navigateTo(SCREENS.CALIBRATION);
+      navigateTo(SCREENS.MATH_GAME_SELECT);
     });
 
     thaiCard.addEventListener('click', () => {

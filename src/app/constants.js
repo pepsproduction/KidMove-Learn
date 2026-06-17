@@ -1,6 +1,8 @@
 export const SCREENS = {
   HOME: 'home',
   SUBJECT_SELECT: 'subject-select',
+  MATH_GAME_SELECT: 'math-game-select',
+  GAME_SETUP: 'game-setup',
   CALIBRATION: 'calibration',
   GAME_PLAY: 'game-play',
   RESULTS: 'results',
@@ -46,6 +48,7 @@ export const INPUT_MODES = {
 
 export const GAME_IDS = {
   FRUIT_COUNT: 'fruit-count',
+  MATH_JUMP_ANSWER: 'math-jump-answer',
   BUBBLE_VOWEL: 'bubble-vowel',
   WORD_CATCH: 'word-catch'
 };

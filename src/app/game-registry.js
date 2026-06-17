@@ -1,5 +1,6 @@
-import { SUBJECTS } from './constants.js';
+import { SUBJECTS, GAME_IDS } from './constants.js';
 import { fruitCountGame } from '../games/math/fruit-count-game.js';
+import { mathJumpAnswerGame } from '../games/math/math-jump-answer-game.js';
 
 /**
  * Game Registry mapping subjects to their available games and default configuration.
@@ -11,18 +12,19 @@ import { fruitCountGame } from '../games/math/fruit-count-game.js';
  * 4. Register the game under the appropriate SUBJECT key:
  *    ```js
  *    [SUBJECTS.ENGLISH]: {
- *      defaultGameId: 'word-catch',
+ *      defaultGameId: GAME_IDS.WORD_CATCH,
  *      games: {
- *        'word-catch': wordCatchGame
+ *        [GAME_IDS.WORD_CATCH]: wordCatchGame
  *      }
  *    }
  *    ```
  */
 export const gameRegistry = {
   [SUBJECTS.MATH]: {
-    defaultGameId: 'fruit-count',
+    defaultGameId: GAME_IDS.FRUIT_COUNT,
     games: {
-      'fruit-count': fruitCountGame
+      [GAME_IDS.FRUIT_COUNT]: fruitCountGame,
+      [GAME_IDS.MATH_JUMP_ANSWER]: mathJumpAnswerGame
     }
   },
   [SUBJECTS.THAI]: {

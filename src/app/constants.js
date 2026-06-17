@@ -51,7 +51,7 @@ export const GAME_IDS = {
   FRUIT_COUNT: 'fruit-count',
   MATH_JUMP_ANSWER: 'math-jump-answer',
   THAI_LETTER_HOME: 'thai-letter-home',
+  THAI_VOWEL_BUBBLE: 'thai-vowel-bubble',
   BUBBLE_VOWEL: 'bubble-vowel',
   WORD_CATCH: 'word-catch'
 };
-

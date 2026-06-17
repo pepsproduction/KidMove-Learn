@@ -64,6 +64,9 @@ class GameSetupScreen {
     if (gameId === GAME_IDS.THAI_LETTER_HOME) {
       titleEl.innerHTML = '🏠 บ้านพยัญชนะ ก-ฮ';
       subtitleEl.innerHTML = 'ดูภาพ ฟังเสียง แล้วเลือกบ้านพยัญชนะให้ถูก';
+    } else if (gameId === GAME_IDS.THAI_VOWEL_BUBBLE) {
+      titleEl.innerHTML = '🫧 เป่าฟองสบู่สระไทย';
+      subtitleEl.innerHTML = 'ฟังเสียงแล้วใช้มือตีฟองสบู่สระให้ถูกต้อง';
     } else {
       titleEl.innerHTML = '🦘 กระโดดตอบบวกลบ';
       subtitleEl.innerHTML = 'ตั้งค่าเกมก่อนเริ่มเล่น';

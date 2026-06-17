@@ -29,10 +29,11 @@ class ThaiGameSelectScreen {
             <div class="subject-status active-status">พร้อมเล่น!</div>
           </div>
           
-          <div class="subject-card inactive-card">
+          <div id="card-thai-vowel-bubble" class="subject-card active-card btn-bounce">
             <div class="subject-emoji">🫧</div>
             <h3>เป่าฟองสบู่สระไทย</h3>
-            <p>เร็วๆ นี้</p>
+            <p>ฟังเสียงแล้วใช้มือตีฟองสบู่สระให้ถูกต้อง</p>
+            <div class="subject-status active-status">พร้อมเล่น!</div>
           </div>
         </div>
       </div>
@@ -53,6 +54,16 @@ class ThaiGameSelectScreen {
       state.set({
         activeSubject: SUBJECTS.THAI,
         activeGameId: GAME_IDS.THAI_LETTER_HOME
+      });
+      navigateTo(SCREENS.GAME_SETUP);
+    });
+
+    const vowelBubbleCard = document.getElementById('card-thai-vowel-bubble');
+    vowelBubbleCard.addEventListener('click', () => {
+      audioManager.playSound('click');
+      state.set({
+        activeSubject: SUBJECTS.THAI,
+        activeGameId: GAME_IDS.THAI_VOWEL_BUBBLE
       });
       navigateTo(SCREENS.GAME_SETUP);
     });

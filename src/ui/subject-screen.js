@@ -1,5 +1,6 @@
 import { state } from '../app/state.js';
 import { SCREENS, SUBJECTS } from '../app/constants.js';
+import { navigateTo } from '../app/screen-machine.js';
 import { audioManager } from '../utils/audio-manager.js';
 
 class SubjectScreen {
@@ -57,31 +58,34 @@ class SubjectScreen {
 
     backBtn.addEventListener('click', () => {
       audioManager.playSound('click');
-      state.set({ currentScreen: SCREENS.HOME });
+      navigateTo(SCREENS.HOME);
     });
 
     mathCard.addEventListener('click', () => {
       audioManager.playSound('click');
       state.set({
         activeSubject: SUBJECTS.MATH,
-        currentScreen: SCREENS.CALIBRATION
+        activeGameId: 'fruit-count'
       });
+      navigateTo(SCREENS.CALIBRATION);
     });
 
     thaiCard.addEventListener('click', () => {
       audioManager.playSound('click');
       state.set({
         activeSubject: SUBJECTS.THAI,
-        currentScreen: SCREENS.PREVIEW
+        activeGameId: 'bubble-vowel'
       });
+      navigateTo(SCREENS.PREVIEW);
     });
 
     englishCard.addEventListener('click', () => {
       audioManager.playSound('click');
       state.set({
         activeSubject: SUBJECTS.ENGLISH,
-        currentScreen: SCREENS.PREVIEW
+        activeGameId: 'word-catch'
       });
+      navigateTo(SCREENS.PREVIEW);
     });
   }
 }

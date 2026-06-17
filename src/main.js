@@ -9,8 +9,10 @@ import { previewScreen } from './ui/preview-screen.js';
 import { cameraManager } from './camera/camera-manager.js';
 import { poseDetector } from './camera/pose-detector.js';
 import { calibration } from './camera/calibration.js';
-import { fruitCountGame } from './games/math/fruit-count-game.js';
+import { getActiveGame } from './app/game-registry.js';
+import { navigateTo } from './app/screen-machine.js';
 import { audioManager } from './utils/audio-manager.js';
+import { fullscreenManager } from './app/fullscreen-manager.js';
 
 // 1. Responsive 16:9 Screen Autoscaler
 function resizeApp() {
@@ -41,6 +43,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   
   // Setup router
   router.init();
+  
+  // Setup Fullscreen and NoSleep
+  fullscreenManager.init();
 
   // Unified camera DOM elements
   const cameraContainer = document.getElementById('unified-camera-container');
@@ -60,7 +65,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const calBackBtn = document.getElementById('btn-calibration-back');
   calBackBtn.addEventListener('click', () => {
     audioManager.playSound('click');
-    state.set({ currentScreen: SCREENS.SUBJECT_SELECT });
+    navigateTo(SCREENS.SUBJECT_SELECT);
   });
 
   // Watch state.currentScreen to manage webcam and game instances
@@ -84,7 +89,10 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     // Stop active instances
     calibration.stop();
-    fruitCountGame.stop();
+    const activeGameToStop = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+    if (activeGameToStop) {
+      activeGameToStop.stop();
+    }
 
     if (screen === SCREENS.CALIBRATION) {
       cameraContainer.className = 'camera-calibration loading';
@@ -116,7 +124,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         cameraFallbackTimeout = setTimeout(() => {
           cameraFallbackTimeout = null;
           if (state.get('currentScreen') === SCREENS.CALIBRATION) {
-            state.set({ currentScreen: SCREENS.GAME_PLAY });
+            navigateTo(SCREENS.GAME_PLAY);
           }
         }, 3000);
       }
@@ -131,8 +139,13 @@ window.addEventListener('DOMContentLoaded', async () => {
       if (screen === SCREENS.GAME_PLAY) {
         // Initialize and Start Game
         const gameCanvas = document.getElementById('game-canvas');
-        fruitCountGame.init(gameCanvas, videoElement);
-        fruitCountGame.start();
+        const activeGameToStart = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+        if (activeGameToStart) {
+          activeGameToStart.init(gameCanvas, videoElement);
+          activeGameToStart.start();
+        } else {
+          console.warn(`No active game found for subject: ${state.get('activeSubject')}, gameId: ${state.get('activeGameId')}`);
+        }
       }
     } 
     else {

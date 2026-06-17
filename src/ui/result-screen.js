@@ -1,5 +1,6 @@
 import { state } from '../app/state.js';
 import { SCREENS } from '../app/constants.js';
+import { navigateTo } from '../app/screen-machine.js';
 import { audioManager } from '../utils/audio-manager.js';
 
 class ResultScreen {
@@ -91,12 +92,12 @@ class ResultScreen {
 
     playAgainBtn.onclick = () => {
       audioManager.playSound('click');
-      state.set({ currentScreen: SCREENS.CALIBRATION });
+      navigateTo(SCREENS.CALIBRATION);
     };
 
     homeBtn.onclick = () => {
       audioManager.playSound('click');
-      state.set({ currentScreen: SCREENS.HOME });
+      navigateTo(SCREENS.HOME);
     };
   }
 }

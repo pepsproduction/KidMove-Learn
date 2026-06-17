@@ -1,18 +1,21 @@
+import { BaseGame } from '../core/base-game.js';
+import { inputAdapter } from '../core/input-adapter.js';
+import { navigateTo } from '../../app/screen-machine.js';
 import { state } from '../../app/state.js';
 import { SCREENS, GESTURES, LEVELS } from '../../app/constants.js';
 import { FRUITS, getTargetRangeForLevel } from './math-content.js';
 import { MATH_GAME_CONFIG } from './math-config.js';
 import { audioManager } from '../../utils/audio-manager.js';
 import { randomRange, randomIntRange, randomChoice } from '../../utils/random.js';
-import { poseDetector } from '../../camera/pose-detector.js';
 import { gestureEngine } from '../../camera/gesture-engine.js';
 
-class FruitCountGame {
+/**
+ * FruitCountGame is the Math counting game.
+ * It extends BaseGame and uses InputAdapter for unified, throttled gesture/keyboard inputs.
+ */
+class FruitCountGame extends BaseGame {
   constructor() {
-    this.canvas = null;
-    this.ctx = null;
-    this.video = null;
-    this.animationId = null;
+    super('fruit-count');
 
     // Game objects
     this.basketX = MATH_GAME_CONFIG.canvasWidth / 2;
@@ -27,47 +30,18 @@ class FruitCountGame {
     this.hasAnnouncedQuestion = false;
     this.isQuestionTransitioning = false;
     this.transitionTimeout = null;
-
-    // Keyboard control states
-    this.keys = {
-      ArrowLeft: false,
-      ArrowRight: false,
-      Enter: false
-    };
-
-    // State bindings
-    this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);
   }
 
+  /**
+   * Initializes the game by setting up canvas and inputs.
+   */
   init(canvasElement, videoElement) {
-    this.canvas = canvasElement;
-    this.ctx = this.canvas.getContext('2d');
-    this.video = videoElement;
-
-    // Setup input listeners for fallback keyboard mode
-    window.addEventListener('keydown', this.handleKeyDown);
-    window.addEventListener('keyup', this.handleKeyUp);
+    super.init(canvasElement, videoElement);
   }
 
-  destroy() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('keyup', this.handleKeyUp);
-    this.stop();
-  }
-
-  handleKeyDown(e) {
-    if (e.key === 'ArrowLeft') this.keys.ArrowLeft = true;
-    if (e.key === 'ArrowRight') this.keys.ArrowRight = true;
-    if (e.key === 'Enter') this.keys.Enter = true;
-  }
-
-  handleKeyUp(e) {
-    if (e.key === 'ArrowLeft') this.keys.ArrowLeft = false;
-    if (e.key === 'ArrowRight') this.keys.ArrowRight = false;
-    if (e.key === 'Enter') this.keys.Enter = false;
-  }
-
+  /**
+   * Resets scores, clears active timers, generates the first question, and starts the game loop.
+   */
   start() {
     state.set({
       gameRunning: true,
@@ -76,10 +50,8 @@ class FruitCountGame {
       fruitsPicked: 0
     });
 
-    if (this.transitionTimeout) {
-      clearTimeout(this.transitionTimeout);
-      this.transitionTimeout = null;
-    }
+    this.clearTimers();
+    this.transitionTimeout = null;
 
     this.basketX = MATH_GAME_CONFIG.canvasWidth / 2;
     this.basketTargetX = MATH_GAME_CONFIG.canvasWidth / 2;
@@ -89,21 +61,21 @@ class FruitCountGame {
     this.isQuestionTransitioning = false;
     
     this.generateQuestion();
-    this.loop();
+    super.start();
   }
 
+  /**
+   * Stops the game loop and updates state.
+   */
   stop() {
+    super.stop();
     state.set({ gameRunning: false });
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-      this.animationId = null;
-    }
-    if (this.transitionTimeout) {
-      clearTimeout(this.transitionTimeout);
-      this.transitionTimeout = null;
-    }
+    this.transitionTimeout = null;
   }
 
+  /**
+   * Generates a new random counting question based on the selected difficulty level.
+   */
   generateQuestion() {
     const currentIdx = state.get('currentQuestionIdx');
     if (currentIdx >= MATH_GAME_CONFIG.questionsPerSession) {
@@ -131,6 +103,9 @@ class FruitCountGame {
     audioManager.speak(textTh, textEn);
   }
 
+  /**
+   * Wraps up the game session, saves final score to history, and transitions to results screen.
+   */
   endGameSession() {
     this.stop();
     
@@ -146,15 +121,18 @@ class FruitCountGame {
     if (history.length > 5) history.pop();
     
     state.set({
-      lastScores: history,
-      currentScreen: SCREENS.RESULTS
+      lastScores: history
     });
+
+    navigateTo(SCREENS.RESULTS);
   }
 
-  // Next Question trigger (from teacher panel)
+  /**
+   * Skips the current question, resets transition states, and generates a new question.
+   */
   skipQuestion() {
     if (this.transitionTimeout) {
-      clearTimeout(this.transitionTimeout);
+      this.clearTimeout(this.transitionTimeout);
       this.transitionTimeout = null;
     }
     this.isQuestionTransitioning = false;
@@ -163,51 +141,30 @@ class FruitCountGame {
     this.generateQuestion();
   }
 
-  loop() {
-    if (state.get('currentScreen') !== SCREENS.GAME_PLAY || !state.get('gameRunning')) {
-      this.stop();
-      return;
-    }
+  /**
+   * Frame-by-frame physics and logic update.
+   * Uses inputAdapter and calculates using delta-time (dt) for framerate independence.
+   */
+  update(dt, now) {
+    // 1. Process inputs via inputAdapter
+    const input = inputAdapter.getInput(now);
 
-    const now = performance.now();
-    this.update(now);
-    this.draw();
-
-    this.animationId = requestAnimationFrame(() => this.loop());
-  }
-
-  update(now) {
-    // 1. Process webcam inputs if camera is active
-    let detectedLandmarks = null;
-    if (state.get('cameraActive') && this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
-      const poseResult = poseDetector.detect(this.video, now);
-      if (poseResult && poseResult.landmarks && poseResult.landmarks[0]) {
-        detectedLandmarks = poseResult.landmarks[0];
-        
-        // Analyze gestures
-        const gesture = gestureEngine.analyze(detectedLandmarks);
-        
-        // Horizontal Movement based on Leaning Offset
-        // MediaPipe X coordinates are 0 (left) to 1 (right)
-        // Check if baseline is initialized
-        if (gestureEngine.baselines.initialized) {
-          const midX = (detectedLandmarks[11].x + detectedLandmarks[12].x) / 2;
-          const diff = midX - gestureEngine.baselines.shoulderMidX;
-          
-          // Mirror mapping: leaning right (smaller X on mirrored view) -> move basket left
-          // Map range [-0.2, 0.2] to canvas coordinates
-          const gain = 2.0; // speed/sensitivity modifier
-          this.basketTargetX = MATH_GAME_CONFIG.canvasWidth / 2 - (diff * MATH_GAME_CONFIG.canvasWidth * gain);
-        }
-      }
+    // Horizontal Movement based on Leaning Offset from pose
+    if (input.inputMode === 'pose' && input.landmarks && gestureEngine.baselines.initialized) {
+      const midX = (input.landmarks[11].x + input.landmarks[12].x) / 2;
+      const diff = midX - gestureEngine.baselines.shoulderMidX;
+      
+      // Mirror mapping: leaning right (smaller X on mirrored view) -> move basket left
+      const gain = 2.0; // speed/sensitivity modifier
+      this.basketTargetX = MATH_GAME_CONFIG.canvasWidth / 2 - (diff * MATH_GAME_CONFIG.canvasWidth * gain);
     }
 
     // 2. Keyboard fallback controls
-    const keyboardSpeed = MATH_GAME_CONFIG.basketSpeed;
-    if (this.keys.ArrowLeft) {
+    const keyboardSpeed = MATH_GAME_CONFIG.basketSpeed * (dt / 0.0166);
+    if (input.keyboard.ArrowLeft) {
       this.basketTargetX -= keyboardSpeed;
     }
-    if (this.keys.ArrowRight) {
+    if (input.keyboard.ArrowRight) {
       this.basketTargetX += keyboardSpeed;
     }
 
@@ -215,7 +172,7 @@ class FruitCountGame {
     const halfWidth = MATH_GAME_CONFIG.basketWidth / 2;
     this.basketTargetX = Math.max(halfWidth, Math.min(MATH_GAME_CONFIG.canvasWidth - halfWidth, this.basketTargetX));
 
-    // Smooth easing
+    // Smooth easing (remains frame-rate independent relative to target positioning)
     this.basketX += (this.basketTargetX - this.basketX) * MATH_GAME_CONFIG.basketSmoothFactor;
 
     // 3. Spawning Fruits
@@ -229,27 +186,19 @@ class FruitCountGame {
     const basketWidth = MATH_GAME_CONFIG.basketWidth;
     const basketHeight = MATH_GAME_CONFIG.basketHeight;
 
-    const basketRect = {
-      x: this.basketX - basketWidth / 2,
-      y: basketY,
-      width: basketWidth,
-      height: basketHeight
-    };
-
     const targetFruit = state.get('questionFruit');
     const targetCount = state.get('questionTarget');
     const currentPicked = state.get('fruitsPicked');
 
     // Read collection mode setting
     const collectMode = state.get('collectMode') || 'gesture';
-    // Read current gesture
-    const currentGesture = state.get('currentGesture');
-    const isHarvesting = (collectMode === 'auto' || currentGesture === GESTURES.RAISE_RIGHT || this.keys.Enter);
+    const currentGesture = input.gesture;
+    const isHarvesting = (collectMode === 'auto' || currentGesture === GESTURES.RAISE_RIGHT || input.keyboard.Enter);
 
     for (let i = this.fruits.length - 1; i >= 0; i--) {
       const fruit = this.fruits[i];
-      fruit.y += fruit.vy;
-      fruit.wobble += fruit.wobbleSpeed;
+      fruit.y += fruit.vy * (dt / 0.0166);
+      fruit.wobble += fruit.wobbleSpeed * (dt / 0.0166);
 
       // Check boundary: fruit fell past screen bottom
       if (fruit.y - fruit.radius > MATH_GAME_CONFIG.canvasHeight) {
@@ -293,7 +242,7 @@ class FruitCountGame {
 
               // Delay shortly then load next question smoothly without stopping loop
               this.isQuestionTransitioning = true;
-              this.transitionTimeout = setTimeout(() => {
+              this.transitionTimeout = this.setTimeout(() => {
                 this.transitionTimeout = null;
                 // Check if screen changed while waiting
                 if (state.get('currentScreen') !== SCREENS.GAME_PLAY) return;
@@ -308,7 +257,7 @@ class FruitCountGame {
               // Collected too many!
               audioManager.playSound('incorrect');
               audioManager.speak("ลองใหม่นะ อีกนิดเดียวจ้า", "Try again! You are so close.");
-              state.set({ fruitsPicked: 0 }); // reset count for this question friendly fallback
+              state.set({ fruitsPicked: 0 }); // Reset count for this question friendly fallback
               this.fruits = [];
             }
           } else {
@@ -324,7 +273,7 @@ class FruitCountGame {
 
       // Update lateral speeds for bounced decoys
       if (fruit.vx) {
-        fruit.x += fruit.vx;
+        fruit.x += fruit.vx * (dt / 0.0166);
         // bounce walls
         if (fruit.x - fruit.radius < 0 || fruit.x + fruit.radius > MATH_GAME_CONFIG.canvasWidth) {
           fruit.vx *= -1;
@@ -335,15 +284,18 @@ class FruitCountGame {
     // 5. Update Particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
-      p.x += p.vx;
-      p.y += p.vy;
-      p.alpha -= p.decay;
+      p.x += p.vx * (dt / 0.0166);
+      p.y += p.vy * (dt / 0.0166);
+      p.alpha -= p.decay * (dt / 0.0166);
       if (p.alpha <= 0) {
         this.particles.splice(i, 1);
       }
     }
   }
 
+  /**
+   * Spawns a fruit at the top of the canvas.
+   */
   spawnFruit() {
     const targetFruit = state.get('questionFruit');
     if (!targetFruit) return;
@@ -373,6 +325,9 @@ class FruitCountGame {
     });
   }
 
+  /**
+   * Spawns a reward explosion particles.
+   */
   createExplosion(x, y, color) {
     const count = 12;
     for (let i = 0; i < count; i++) {
@@ -391,6 +346,9 @@ class FruitCountGame {
     }
   }
 
+  /**
+   * Game drawing step. Renders the graphics, overlays, and counts.
+   */
   draw() {
     // 1. Clear Screen with Sky blue gradient
     const skyGrad = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
@@ -482,7 +440,6 @@ class FruitCountGame {
       this.ctx.globalAlpha = p.alpha;
       this.ctx.fillStyle = p.color;
       this.ctx.beginPath();
-      // Draw star shape or circle
       this.ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
       this.ctx.fill();
       this.ctx.restore();
@@ -584,8 +541,7 @@ class FruitCountGame {
 
       // Fruits counter status circles
       this.ctx.save();
-      // Dynamically adjust size/gap for larger target counts to prevent overlapping with the HUD boxes
-      const maxAvailableWidth = 260; // Space between Question Box (ends at 340) and Score Box (starts at 640) with safe margins
+      const maxAvailableWidth = 260; 
       let gap = 36;
       let radius = 22;
       let emojiFontSize = 22;
@@ -612,7 +568,7 @@ class FruitCountGame {
         this.ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         
         if (c < picked) {
-          // collected item
+          // Collected item
           this.ctx.fillStyle = '#ffd43b'; // yellow glow
           this.ctx.fill();
           this.ctx.strokeStyle = '#ff922b';
@@ -624,7 +580,7 @@ class FruitCountGame {
           this.ctx.textBaseline = 'middle';
           this.ctx.fillText(targetFruitItem.emoji, cx, cy);
         } else {
-          // empty placeholder circle
+          // Empty placeholder circle
           this.ctx.fillStyle = 'rgba(255,255,255,0.6)';
           this.ctx.fill();
           this.ctx.strokeStyle = 'rgba(0,0,0,0.15)';

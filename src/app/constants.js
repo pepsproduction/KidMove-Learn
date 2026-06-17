@@ -38,3 +38,15 @@ export const KEYBOARD_CONTROLS = {
   RESET: 'r',
   TOGGLE_DEBUG: 'd'
 };
+
+export const INPUT_MODES = {
+  KEYBOARD: 'keyboard',
+  POSE: 'pose'
+};
+
+export const GAME_IDS = {
+  FRUIT_COUNT: 'fruit-count',
+  BUBBLE_VOWEL: 'bubble-vowel',
+  WORD_CATCH: 'word-catch'
+};
+

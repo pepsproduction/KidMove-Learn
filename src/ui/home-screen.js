@@ -1,5 +1,6 @@
 import { state } from '../app/state.js';
 import { SCREENS } from '../app/constants.js';
+import { navigateTo } from '../app/screen-machine.js';
 import { audioManager } from '../utils/audio-manager.js';
 
 class HomeScreen {
@@ -83,7 +84,7 @@ class HomeScreen {
 
     startPlayBtn.addEventListener('click', () => {
       audioManager.playSound('click');
-      state.set({ currentScreen: SCREENS.SUBJECT_SELECT });
+      navigateTo(SCREENS.SUBJECT_SELECT);
     });
 
     teacherModeBtn.addEventListener('click', () => {

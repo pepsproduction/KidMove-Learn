@@ -1,5 +1,6 @@
 import { state } from '../app/state.js';
 import { SCREENS, GESTURES } from '../app/constants.js';
+import { navigateTo } from '../app/screen-machine.js';
 import { poseDetector } from './pose-detector.js';
 import { gestureEngine } from './gesture-engine.js';
 import { audioManager } from '../utils/audio-manager.js';
@@ -112,7 +113,7 @@ class Calibration {
               this.calibrationTimeout = setTimeout(() => {
                 this.calibrationTimeout = null;
                 if (state.get('currentScreen') === SCREENS.CALIBRATION) {
-                  state.set({ currentScreen: SCREENS.GAME_PLAY });
+                  navigateTo(SCREENS.GAME_PLAY);
                 }
               }, 1000);
               

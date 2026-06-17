@@ -1,7 +1,8 @@
 import { state } from '../app/state.js';
 import { LEVELS, SCREENS } from '../app/constants.js';
 import { audioManager } from '../utils/audio-manager.js';
-import { fruitCountGame } from '../games/math/fruit-count-game.js';
+import { getActiveGame } from '../app/game-registry.js';
+import { navigateTo } from '../app/screen-machine.js';
 
 class TeacherPanel {
   constructor() {
@@ -177,7 +178,10 @@ class TeacherPanel {
       
       // If we are currently in gameplay, recreate question to match level
       if (state.get('currentScreen') === SCREENS.GAME_PLAY && state.get('gameRunning')) {
-        fruitCountGame.generateQuestion();
+        const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+        if (activeGame && typeof activeGame.generateQuestion === 'function') {
+          activeGame.generateQuestion();
+        }
       }
     });
 
@@ -224,10 +228,11 @@ class TeacherPanel {
     startBtn.addEventListener('click', () => {
       audioManager.playSound('click');
       if (state.get('currentScreen') !== SCREENS.GAME_PLAY) {
-        state.set({ currentScreen: SCREENS.CALIBRATION });
+        navigateTo(SCREENS.CALIBRATION);
       } else {
         if (!state.get('gameRunning')) {
-          fruitCountGame.start();
+          const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+          if (activeGame) activeGame.start();
         }
       }
       this.sidebar.classList.remove('open');
@@ -236,21 +241,26 @@ class TeacherPanel {
     pauseBtn.addEventListener('click', () => {
       audioManager.playSound('click');
       if (state.get('currentScreen') === SCREENS.GAME_PLAY && state.get('gameRunning')) {
-        fruitCountGame.stop();
+        const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+        if (activeGame) activeGame.stop();
       }
     });
 
     skipBtn.addEventListener('click', () => {
       audioManager.playSound('click');
       if (state.get('currentScreen') === SCREENS.GAME_PLAY && state.get('gameRunning')) {
-        fruitCountGame.skipQuestion();
+        const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+        if (activeGame && typeof activeGame.skipQuestion === 'function') {
+          activeGame.skipQuestion();
+        }
       }
     });
 
     resetBtn.addEventListener('click', () => {
       audioManager.playSound('click');
       if (state.get('currentScreen') === SCREENS.GAME_PLAY && state.get('gameRunning')) {
-        fruitCountGame.start(); // restarts score/indices
+        const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+        if (activeGame) activeGame.start(); // restarts score/indices
       }
     });
   }
@@ -268,13 +278,16 @@ class TeacherPanel {
           // Space: Start/Pause Game
           e.preventDefault();
           if (state.get('currentScreen') === SCREENS.GAME_PLAY) {
-            if (state.get('gameRunning')) {
-              fruitCountGame.stop();
-              audioManager.speak("หยุดเล่นชั่วคราว", "Game paused.");
-            } else {
-              state.set({ gameRunning: true });
-              fruitCountGame.loop();
-              audioManager.speak("เล่นต่อจ้า", "Game resumed.");
+            const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+            if (activeGame) {
+              if (state.get('gameRunning')) {
+                activeGame.stop();
+                audioManager.speak("หยุดเล่นชั่วคราว", "Game paused.");
+              } else {
+                state.set({ gameRunning: true });
+                activeGame.loop();
+                audioManager.speak("เล่นต่อจ้า", "Game resumed.");
+              }
             }
           }
           break;
@@ -282,14 +295,20 @@ class TeacherPanel {
         case 'n':
           // Next question
           if (state.get('currentScreen') === SCREENS.GAME_PLAY && state.get('gameRunning')) {
-            fruitCountGame.skipQuestion();
+            const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+            if (activeGame && typeof activeGame.skipQuestion === 'function') {
+              activeGame.skipQuestion();
+            }
           }
           break;
 
         case 'r':
           // Reset score/game
           if (state.get('currentScreen') === SCREENS.GAME_PLAY && state.get('gameRunning')) {
-            fruitCountGame.start();
+            const activeGame = getActiveGame(state.get('activeSubject'), state.get('activeGameId'));
+            if (activeGame) {
+              activeGame.start();
+            }
           }
           break;
 

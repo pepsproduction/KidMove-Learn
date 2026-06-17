@@ -131,7 +131,7 @@ class ThaiVowelBubbleGame extends BaseGame {
     navigateTo(SCREENS.RESULTS);
   }
 
-  update(dt) {
+  update(dt, now) {
     try {
       if (this.errorMessage) return;
       if (!this.currentQuestion || this.isTransitioning) return;
@@ -140,7 +140,8 @@ class ThaiVowelBubbleGame extends BaseGame {
       const level = settings?.level || 'normal';
       const speedMult = this.config.difficulty[level].speedMultiplier;
       
-      const landmarks = inputAdapter.getRawLandmarks();
+      const input = inputAdapter.getInput(now);
+      const landmarks = input.landmarks;
       const wrists = [];
       if (landmarks) {
         const l = landmarks[15];

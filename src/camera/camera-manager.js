@@ -20,7 +20,7 @@ class CameraManager {
     }
 
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
+      const mediaPromise = navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
@@ -28,6 +28,12 @@ class CameraManager {
         },
         audio: false // Privacy: no audio recorded
       });
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Camera request timed out (user may have ignored prompt)')), 15000);
+      });
+
+      this.stream = await Promise.race([mediaPromise, timeoutPromise]);
 
       if (this.videoElement) {
         await new Promise((resolve) => {

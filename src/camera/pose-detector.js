@@ -16,20 +16,27 @@ class PoseDetector {
     this.isLoading = true;
     this.loadPromise = (async () => {
       try {
-        // Initialize resolver and landmarker using CDN files for reliability and cache performance
-        const vision = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
-        );
+        const initPromise = (async () => {
+          const vision = await FilesetResolver.forVisionTasks(
+            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
+          );
 
-        this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-            delegate: "GPU"
-          },
-          runningMode: "VIDEO",
-          numPoses: 1
+          return await PoseLandmarker.createFromOptions(vision, {
+            baseOptions: {
+              modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+              delegate: "GPU"
+            },
+            runningMode: "VIDEO",
+            numPoses: 1
+          });
+        })();
+
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('MediaPipe initialization timed out')), 20000);
         });
 
+        this.poseLandmarker = await Promise.race([initPromise, timeoutPromise]);
+        
         this.initialized = true;
         console.log("MediaPipe Pose Landmarker loaded successfully.");
       } catch (error) {

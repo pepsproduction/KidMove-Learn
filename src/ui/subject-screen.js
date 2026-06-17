@@ -34,7 +34,7 @@ class SubjectScreen {
             <div class="subject-emoji">🇹🇭</div>
             <h3>ภาษาไทย</h3>
             <p>เป่าฟองสบู่พยัญชนะ ก-ฮ</p>
-            <div class="subject-status active-status">แง้มดูตัวอย่าง!</div>
+            <div class="subject-status" style="background-color: #868e96; color: white;">(เตรียมพบกันเร็วๆ นี้)</div>
           </div>
 
           <!-- English subject: active placeholder preview -->
@@ -42,7 +42,7 @@ class SubjectScreen {
             <div class="subject-emoji">🔤</div>
             <h3>ภาษาอังกฤษ</h3>
             <p>จับคู่ศัพท์คำศัพท์แสนง่าย</p>
-            <div class="subject-status active-status">แง้มดูตัวอย่าง!</div>
+            <div class="subject-status" style="background-color: #868e96; color: white;">(เตรียมพบกันเร็วๆ นี้)</div>
           </div>
         </div>
       </div>

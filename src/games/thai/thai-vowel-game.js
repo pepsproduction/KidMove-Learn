@@ -29,20 +29,15 @@ class ThaiVowelBubbleGame extends BaseGame {
 
   start() {
     this.resetState();
-    const settings = state.get('gameSettings');
-    if (settings) {
-      this.timeLeft = settings.timerSeconds || this.config.defaultTimerSeconds;
-    }
-    
     super.start();
     this.startQuestion();
     
-    // Timer interval
+    // Per-question timer interval
     this.stateTimer = this.setInterval(() => {
       if (this.isTransitioning || !state.get('gameRunning')) return;
       this.timeLeft--;
       if (this.timeLeft <= 0) {
-        this.endGame();
+        this.handleTimeout();
       }
     }, 1000);
   }
@@ -61,21 +56,23 @@ class ThaiVowelBubbleGame extends BaseGame {
       const settings = state.get('gameSettings');
       const level = settings?.level || 'normal';
       
-      const numBubbles = this.config.difficulty[level].bubbleCountPerWave;
+      this.timeLeft = this.config.difficulty[level].timePerQuestion;
       
-      this.currentQuestion = generateThaiVowelQuestion(level, this.usedVowelsHistory, numBubbles);
+      this.currentQuestion = generateThaiVowelQuestion(level, this.usedVowelsHistory);
       this.usedVowelsHistory.push(this.currentQuestion.choices.find(c => c.correct).vowel);
       
       this.bubbles = [];
       const W = this.config.canvasWidth;
       const H = this.config.canvasHeight;
-      const spacing = W / (numBubbles + 1);
+      const spacing = W / 4;
+      const positions = [spacing, spacing * 2, spacing * 3];
       
       this.currentQuestion.choices.forEach((choice, index) => {
         this.bubbles.push({
           vowel: choice.vowel,
           correct: choice.correct,
-          x: spacing * (index + 1),
+          x: positions[index],
+          baseX: positions[index],
           y: H + 100 + Math.random() * 100,
           radius: this.config.bubbleBaseRadius,
           popped: false,
@@ -102,8 +99,20 @@ class ThaiVowelBubbleGame extends BaseGame {
       this.triggerNextQuestion(true);
     } else {
       audioManager.playSound('wrong');
-      // Briefly show red highlight or just pop it
     }
+  }
+
+  handleTimeout() {
+    if (this.isTransitioning) return;
+    this.isTransitioning = true;
+    audioManager.playSound('incorrect');
+    
+    // Pop wrong ones, highlight correct
+    this.bubbles.forEach(bubble => {
+      if (!bubble.correct) bubble.popped = true;
+    });
+
+    this.setTimeout(() => this.triggerNextQuestion(false), 2000);
   }
 
   triggerNextQuestion(wasCorrect) {
@@ -163,11 +172,29 @@ class ThaiVowelBubbleGame extends BaseGame {
         
         allBubblesGone = false;
 
-        bubble.y -= this.config.bubbleSpeedBaseY * speedMult * (dt * 60);
+        // Evasion logic for Hard mode
+        if (this.config.difficulty[level].evasion && bubble.y <= this.config.bubbleTargetY) {
+          bubble.baseX += Math.sin(now / 300 + bubble.phase) * this.config.bubbleEvasionSpeed * (dt * 60);
+          
+          // Clamp evasion to within reasonable bounds (±50px from original position)
+          const originalX = (this.config.canvasWidth / 4) * (this.bubbles.indexOf(bubble) + 1);
+          if (bubble.baseX < originalX - 50) bubble.baseX = originalX - 50;
+          if (bubble.baseX > originalX + 50) bubble.baseX = originalX + 50;
+        }
+
+        // Move Y up until target
+        if (bubble.y > this.config.bubbleTargetY) {
+          bubble.y -= this.config.bubbleSpeedBaseY * speedMult * (dt * 60);
+        } else {
+          bubble.y = this.config.bubbleTargetY;
+        }
         
         bubble.phase += this.config.bubbleWobbleSpeed * (dt * 60);
         const wobbleX = Math.sin(bubble.phase) * this.config.bubbleWobbleAmount;
-        const currentX = bubble.x + wobbleX;
+        const currentX = bubble.baseX + wobbleX;
+        
+        // Update bubble.x for drawing
+        bubble.x = currentX;
         
         wrists.forEach(wrist => {
           const dx = currentX - wrist.x;
@@ -178,10 +205,6 @@ class ThaiVowelBubbleGame extends BaseGame {
             this.handleBubblePop(bubble);
           }
         });
-        
-        if (bubble.correct && bubble.y < -bubble.radius) {
-          this.triggerNextQuestion(false);
-        }
       });
     } catch (err) {
       this.errorMessage = "update: " + err.message;

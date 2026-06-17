@@ -10,9 +10,10 @@ export const THAI_VOWEL_CONFIG = {
   // Bubble settings
   bubbleBaseRadius: 40,
   bubbleSpeedBaseY: 2.5,
-  bubbleSpeedMaxY: 4.5,
+  bubbleTargetY: 250, // They float up and stop here
   bubbleWobbleSpeed: 0.05,
   bubbleWobbleAmount: 20,
+  bubbleEvasionSpeed: 1.5, // For hard mode evasion
   
   questionTransitionMs: 4000,
 
@@ -33,18 +34,21 @@ export const THAI_VOWEL_CONFIG = {
   difficulty: {
     easy: {
       questionCount: 5,
-      bubbleCountPerWave: 2,
-      speedMultiplier: 1.0
+      timePerQuestion: 15,
+      speedMultiplier: 1.0,
+      evasion: false
     },
     normal: {
       questionCount: 10,
-      bubbleCountPerWave: 3,
-      speedMultiplier: 1.3
+      timePerQuestion: 10,
+      speedMultiplier: 1.3,
+      evasion: false
     },
     hard: {
       questionCount: 15,
-      bubbleCountPerWave: 4,
-      speedMultiplier: 1.6
+      timePerQuestion: 7,
+      speedMultiplier: 1.6,
+      evasion: true // Bubbles move slightly to dodge hands
     }
   }
 };

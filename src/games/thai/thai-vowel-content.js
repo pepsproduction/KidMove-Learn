@@ -21,7 +21,8 @@ export function getThaiVowelItemsForLevel(level) {
   return THAI_VOWEL_ITEMS;
 }
 
-export function generateThaiVowelQuestion(level, previousVowels = [], numBubbles = 3) {
+export function generateThaiVowelQuestion(level, previousVowels = []) {
+  const numBubbles = 3;
   const pool = getThaiVowelItemsForLevel(level);
   
   // Pick target vowel

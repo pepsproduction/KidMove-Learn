@@ -6,6 +6,7 @@ import { MATH_JUMP_ANSWER_CONFIG } from '../games/math/math-jump-answer-config.j
 import { getQuestionCountForLevel as getMathQuestionCount } from '../games/math/math-jump-answer-content.js';
 import { THAI_LETTER_HOME_CONFIG } from '../games/thai/thai-letter-home-config.js';
 import { getQuestionCountForThaiLevel } from '../games/thai/thai-letter-home-content.js';
+import { THAI_VOWEL_CONFIG } from '../games/thai/thai-vowel-config.js';
 import { GAME_IDS, SUBJECTS } from '../app/constants.js';
 
 class GameSetupScreen {
@@ -17,9 +18,10 @@ class GameSetupScreen {
   }
 
   get activeConfig() {
-    return state.get('activeGameId') === GAME_IDS.THAI_LETTER_HOME 
-      ? THAI_LETTER_HOME_CONFIG 
-      : MATH_JUMP_ANSWER_CONFIG;
+    const gameId = state.get('activeGameId');
+    if (gameId === GAME_IDS.THAI_LETTER_HOME) return THAI_LETTER_HOME_CONFIG;
+    if (gameId === GAME_IDS.THAI_VOWEL_BUBBLE) return THAI_VOWEL_CONFIG;
+    return MATH_JUMP_ANSWER_CONFIG;
   }
 
   init(containerElement) {
@@ -60,16 +62,20 @@ class GameSetupScreen {
     const titleEl = document.getElementById('setup-title');
     const subtitleEl = document.getElementById('setup-subtitle');
     const gameId = state.get('activeGameId');
+    const timerSection = document.querySelectorAll('.setup-section')[1];
 
     if (gameId === GAME_IDS.THAI_LETTER_HOME) {
       titleEl.innerHTML = '🏠 บ้านพยัญชนะ ก-ฮ';
       subtitleEl.innerHTML = 'ดูภาพ ฟังเสียง แล้วเลือกบ้านพยัญชนะให้ถูก';
+      if (timerSection) timerSection.style.display = 'none';
     } else if (gameId === GAME_IDS.THAI_VOWEL_BUBBLE) {
       titleEl.innerHTML = '🫧 เป่าฟองสบู่สระไทย';
       subtitleEl.innerHTML = 'ฟังเสียงแล้วใช้มือตีฟองสบู่สระให้ถูกต้อง';
+      if (timerSection) timerSection.style.display = 'none';
     } else {
       titleEl.innerHTML = '🦘 กระโดดตอบบวกลบ';
       subtitleEl.innerHTML = 'ตั้งค่าเกมก่อนเริ่มเล่น';
+      if (timerSection) timerSection.style.display = 'block';
     }
   }
 
@@ -171,8 +177,11 @@ class GameSetupScreen {
       audioManager.playSound('click');
       
       let questionCount = 5;
-      if (state.get('activeGameId') === GAME_IDS.THAI_LETTER_HOME) {
+      const gameId = state.get('activeGameId');
+      if (gameId === GAME_IDS.THAI_LETTER_HOME) {
         questionCount = getQuestionCountForThaiLevel(this.selectedDifficulty);
+      } else if (gameId === GAME_IDS.THAI_VOWEL_BUBBLE) {
+        questionCount = THAI_VOWEL_CONFIG.difficulty[this.selectedDifficulty].questionCount;
       } else {
         questionCount = getMathQuestionCount(this.selectedDifficulty);
       }

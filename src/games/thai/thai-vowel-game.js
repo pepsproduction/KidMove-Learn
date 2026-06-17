@@ -24,6 +24,7 @@ class ThaiVowelBubbleGame extends BaseGame {
     this.usedVowelsHistory = [];
     this.timeAccumulator = 0;
     this.stateTimer = null;
+    this.errorMessage = null;
   }
 
   start() {
@@ -55,37 +56,39 @@ class ThaiVowelBubbleGame extends BaseGame {
   }
 
   startQuestion() {
-    this.isTransitioning = false;
-    const settings = state.get('gameSettings');
-    const level = settings?.level || 'normal';
-    
-    // Number of bubbles depends on difficulty
-    const numBubbles = this.config.difficulty[level].bubbleCountPerWave;
-    
-    this.currentQuestion = generateThaiVowelQuestion(level, this.usedVowelsHistory, numBubbles);
-    this.usedVowelsHistory.push(this.currentQuestion.choices.find(c => c.correct).vowel);
-    
-    // Spawn bubbles
-    this.bubbles = [];
-    const W = this.config.canvasWidth;
-    const H = this.config.canvasHeight;
-    const spacing = W / (numBubbles + 1);
-    
-    this.currentQuestion.choices.forEach((choice, index) => {
-      this.bubbles.push({
-        vowel: choice.vowel,
-        correct: choice.correct,
-        x: spacing * (index + 1),
-        y: H + 100 + Math.random() * 100, // Start below screen
-        radius: this.config.bubbleBaseRadius,
-        popped: false,
-        popProgress: 0,
-        phase: Math.random() * Math.PI * 2 // Wobble phase
+    try {
+      this.isTransitioning = false;
+      const settings = state.get('gameSettings');
+      const level = settings?.level || 'normal';
+      
+      const numBubbles = this.config.difficulty[level].bubbleCountPerWave;
+      
+      this.currentQuestion = generateThaiVowelQuestion(level, this.usedVowelsHistory, numBubbles);
+      this.usedVowelsHistory.push(this.currentQuestion.choices.find(c => c.correct).vowel);
+      
+      this.bubbles = [];
+      const W = this.config.canvasWidth;
+      const H = this.config.canvasHeight;
+      const spacing = W / (numBubbles + 1);
+      
+      this.currentQuestion.choices.forEach((choice, index) => {
+        this.bubbles.push({
+          vowel: choice.vowel,
+          correct: choice.correct,
+          x: spacing * (index + 1),
+          y: H + 100 + Math.random() * 100,
+          radius: this.config.bubbleBaseRadius,
+          popped: false,
+          popProgress: 0,
+          phase: Math.random() * Math.PI * 2
+        });
       });
-    });
 
-    // Play TTS
-    audioManager.speak(this.currentQuestion.prompt);
+      audioManager.speak(this.currentQuestion.prompt);
+    } catch (err) {
+      this.errorMessage = "startQuestion: " + err.message;
+      console.error(err);
+    }
   }
 
   handleBubblePop(bubble) {
@@ -129,66 +132,60 @@ class ThaiVowelBubbleGame extends BaseGame {
   }
 
   update(dt) {
-    if (!this.currentQuestion || this.isTransitioning) return;
+    try {
+      if (this.errorMessage) return;
+      if (!this.currentQuestion || this.isTransitioning) return;
 
-    const settings = state.get('gameSettings');
-    const level = settings?.level || 'normal';
-    const speedMult = this.config.difficulty[level].speedMultiplier;
-    
-    // Get wrist positions
-    const landmarks = inputAdapter.getRawLandmarks();
-    const wrists = [];
-    if (landmarks) {
-      // 15: Left Wrist, 16: Right Wrist
-      const l = landmarks[15];
-      const r = landmarks[16];
-      const W = this.canvas.width;
-      const H = this.canvas.height;
+      const settings = state.get('gameSettings');
+      const level = settings?.level || 'normal';
+      const speedMult = this.config.difficulty[level].speedMultiplier;
       
-      if (l && l.visibility > 0.5) wrists.push({ x: (1 - l.x) * W, y: l.y * H });
-      if (r && r.visibility > 0.5) wrists.push({ x: (1 - r.x) * W, y: r.y * H });
-    }
-
-    let allBubblesGone = true;
-
-    // Update bubbles
-    this.bubbles.forEach(bubble => {
-      if (bubble.popped) {
-        bubble.popProgress += dt * 0.05;
-        return; // Skip physics
-      }
-      
-      allBubblesGone = false;
-
-      // Float up
-      bubble.y -= this.config.bubbleSpeedBaseY * speedMult * (dt / 16);
-      
-      // Wobble
-      bubble.phase += this.config.bubbleWobbleSpeed * (dt / 16);
-      const wobbleX = Math.sin(bubble.phase) * this.config.bubbleWobbleAmount;
-      const currentX = bubble.x + wobbleX;
-      
-      // Collision detection with wrists
-      wrists.forEach(wrist => {
-        const dx = currentX - wrist.x;
-        const dy = bubble.y - wrist.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+      const landmarks = inputAdapter.getRawLandmarks();
+      const wrists = [];
+      if (landmarks) {
+        const l = landmarks[15];
+        const r = landmarks[16];
+        const W = this.canvas.width;
+        const H = this.canvas.height;
         
-        // Use a slightly larger radius for easier popping
-        if (dist < bubble.radius + 30) {
-          this.handleBubblePop(bubble);
+        if (l && l.visibility > 0.5) wrists.push({ x: (1 - l.x) * W, y: l.y * H });
+        if (r && r.visibility > 0.5) wrists.push({ x: (1 - r.x) * W, y: r.y * H });
+      }
+
+      let allBubblesGone = true;
+
+      this.bubbles.forEach(bubble => {
+        if (bubble.popped) {
+          bubble.popProgress += dt * 0.05;
+          return;
+        }
+        
+        allBubblesGone = false;
+
+        bubble.y -= this.config.bubbleSpeedBaseY * speedMult * (dt / 16);
+        
+        bubble.phase += this.config.bubbleWobbleSpeed * (dt / 16);
+        const wobbleX = Math.sin(bubble.phase) * this.config.bubbleWobbleAmount;
+        const currentX = bubble.x + wobbleX;
+        
+        wrists.forEach(wrist => {
+          const dx = currentX - wrist.x;
+          const dy = bubble.y - wrist.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < bubble.radius + 30) {
+            this.handleBubblePop(bubble);
+          }
+        });
+        
+        if (bubble.correct && bubble.y < -bubble.radius) {
+          this.triggerNextQuestion(false);
         }
       });
-      
-      // If correct bubble goes off-screen, trigger next
-      if (bubble.correct && bubble.y < -bubble.radius) {
-        // Missed it
-        this.triggerNextQuestion(false);
-      }
-    });
-    
-    // If only wrong bubbles are left and they go offscreen, or if they were popped but correct wasn't? 
-    // Handled by the correct bubble off-screen check above.
+    } catch (err) {
+      this.errorMessage = "update: " + err.message;
+      console.error(err);
+    }
   }
 
   draw() {
@@ -205,13 +202,21 @@ class ThaiVowelBubbleGame extends BaseGame {
     ctx.fillRect(0, 0, W, H);
 
     // Draw camera feed at low opacity
-    if (state.get('cameraActive') && this.video && this.video.readyState === this.video.HAVE_ENOUGH_DATA) {
+    if (state.get('cameraActive') && this.video && this.video.readyState === 4) {
       ctx.save();
       ctx.globalAlpha = 0.25;
       ctx.translate(W, 0);
       ctx.scale(-1, 1);
       ctx.drawImage(this.video, 0, 0, W, H);
       ctx.restore();
+    }
+
+    if (this.errorMessage) {
+      ctx.fillStyle = 'red';
+      ctx.font = 'bold 20px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.errorMessage, W / 2, H / 2);
+      return;
     }
 
     if (!this.currentQuestion) return;

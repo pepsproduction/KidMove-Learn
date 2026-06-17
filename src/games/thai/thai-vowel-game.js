@@ -73,7 +73,7 @@ class ThaiVowelBubbleGame extends BaseGame {
           correct: choice.correct,
           x: positions[index],
           baseX: positions[index],
-          y: H + 100 + Math.random() * 100,
+          y: -100 - Math.random() * 100, // Spawn above screen
           radius: this.config.bubbleBaseRadius,
           popped: false,
           popProgress: 0,
@@ -173,7 +173,7 @@ class ThaiVowelBubbleGame extends BaseGame {
         allBubblesGone = false;
 
         // Evasion logic for Hard mode
-        if (this.config.difficulty[level].evasion && bubble.y <= this.config.bubbleTargetY) {
+        if (this.config.difficulty[level].evasion && bubble.y >= this.config.bubbleTargetY) {
           bubble.baseX += Math.sin(now / 300 + bubble.phase) * this.config.bubbleEvasionSpeed * (dt * 60);
           
           // Clamp evasion to within reasonable bounds (±50px from original position)
@@ -182,9 +182,9 @@ class ThaiVowelBubbleGame extends BaseGame {
           if (bubble.baseX > originalX + 50) bubble.baseX = originalX + 50;
         }
 
-        // Move Y up until target
-        if (bubble.y > this.config.bubbleTargetY) {
-          bubble.y -= this.config.bubbleSpeedBaseY * speedMult * (dt * 60);
+        // Move Y down until target
+        if (bubble.y < this.config.bubbleTargetY) {
+          bubble.y += this.config.bubbleSpeedBaseY * speedMult * (dt * 60);
         } else {
           bubble.y = this.config.bubbleTargetY;
         }
